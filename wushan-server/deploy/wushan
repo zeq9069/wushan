@@ -1,0 +1,86 @@
+#!/bin/bash
+# service: namenode or datanode
+# action : start or stop or restart
+
+SERVICE=$1
+ACTION=$2
+
+APP_WORKDIR="`dirname $0`/../"
+
+echo "--------------------------------------"
+
+if [ $JAVA_HOME != "" ]; then
+	echo "JAVA_HOME = $JAVA_HOME"
+else
+	echo " JAVA_HOME is null "
+	exit -1
+fi
+
+MAIN_CLASS=com.sankuai.canyin.r.wushan.server.namenode.NameNode
+
+if [ "$SERVICE" == "datanode" ]; then
+	MAIN_CLASS=com.sankuai.canyin.r.wushan.server.datanode.DataNode
+elif [ "$SERVICE" != "namenode" ]; then
+	echo "unknown args [ $SERVICE ] , MUST datanode or namenode"
+	exit -1
+fi
+
+PIDS=`ps -ef | grep $MAIN_CLASS | grep -v grep | awk '{print$2}'`
+
+if [ "$PIDS" != "" ]; then
+	if [ $ACTION == "stop" ]; then
+		kill -9 $PIDS
+		exit -1
+	elif [ $ACTION == "restart" ]; then
+		echo "Starting stop $MAIN_CLASS service..."
+		kill -9 $PIDS
+	elif [ $ACTION == "start" ]; then
+		echo "$SERVICE is runing! Please stop and then start"
+		exit -1
+	fi
+else
+	if [ $ACTION == "stop" ]; then
+		echo "$SERVICE is stopped"
+		exit -1
+	fi
+fi
+
+
+G1_GC_OPTS="-Xms2G
+                -Xmx2G
+                -XX:PermSize=128m
+	            -XX:MaxPermSize=256m
+                -XX:MetaspaceSize=512M
+                -XX:MaxMetaspaceSize=512M
+                -XX:+UseG1GC
+                -XX:SurvivorRatio=8
+                -XX:NewRatio=3
+                -XX:MaxGCPauseMillis=9
+                -XX:+ExplicitGCInvokesConcurrent
+                -XX:+HeapDumpOnOutOfMemoryError
+                -Xloggc:$APP_LOGDIR/$APP_KEY.gc.log.$DATE_STR
+                -XX:+PrintHeapAtGC
+                -XX:+PrintTenuringDistribution
+                -XX:+PrintGCCause
+                -XX:+PrintGCDetails
+                -XX:+PrintGCDateStamps
+                -XX:+PrintCommandLineFlags"
+                
+JAVA_COMMON=$JAVA_HOME/bin/java
+
+CLASS_PATH=.:$APP_WORKDIR/lib/*:$APP_WORKDIR/conf:$CLASS_PATH
+
+exec $JAVA_COMMON $G1_GC_OPTS -cp $CLASS_PATH $MAIN_CLASS >> /tmp/logs/wushan/wushan.$SERVICE.log 2>&1
+
+
+
+
+
+
+
+
+
+
+
+
+

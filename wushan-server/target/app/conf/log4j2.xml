@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="warn">
+
+    <properties>
+        <property name="LOG_HOME">/var/sankuai/logs</property>
+        <property name="APP_KEY">wushan.server.sys</property>
+        <property name="APP_NAME">wushan_server</property>
+    </properties>
+
+    <appenders>
+        <XMDFile name="mainLogFile" fileName="${APP_NAME}.log" xmdFilePath="${LOG_HOME}" includeLocation="true" sizeBasedTriggeringSize="2G">
+            <PatternLayout pattern="%d{DEFAULT} %t %-5p (%c{1}:%L) - %m%n" charset="UTF-8"/>
+        </XMDFile>
+
+        <XMDFile name="errorLogFile" fileName="${APP_NAME}.error.log" xmdFilePath="${LOG_HOME}" includeLocation="true" sizeBasedTriggeringSize="2G">
+            <PatternLayout pattern="%d{DEFAULT} %t %-5p (%c{1}:%L) - %m%n" charset="UTF-8"/>
+            <ThresholdFilter level="error" onMatch="ACCEPT" onMismatch="DENY"/>
+        </XMDFile>
+
+        <XMDFile name="jmonitorLogFile" fileName="${APP_NAME}.jmonitor.log"  xmdFilePath="${LOG_HOME}" includeLocation="true" sizeBasedTriggeringSize="500m">
+            <PatternLayout pattern="%d{DEFAULT} %t %-5p (%c{1}:%L) - %m%n" charset="UTF-8"/>
+        </XMDFile>
+
+        <XMDFile name="moniterMetricFile" fileName="${APP_NAME}.moniter.metric.log"  xmdFilePath="${LOG_HOME}" includeLocation="true" sizeBasedTriggeringSize="500m">
+            <PatternLayout pattern="%d{DEFAULT} %t %-5p (%c{1}:%L) - %m%n" charset="UTF-8"/>
+        </XMDFile>
+
+        <XMDFile name="requestAppender" fileName="request.log" xmdFilePath="${LOG_HOME}" includeLocation="true" sizeBasedTriggeringSize="2G">
+            <LcLayout/>
+        </XMDFile>
+
+        <Scribe name="ScribeAppender">
+            <Property name="scribeCategory">com.sankuai.canyin.r.wushan</Property>
+            <LcLayout/>
+        </Scribe>
+        <Async name="ScribeAsyncAppender" blocking="true" bufferSize="2200">
+            <AppenderRef ref="ScribeAppender"/>
+        </Async>
+    </appenders>
+
+    <loggers>
+        <logger name="jmonitor" level="info" additivity="false">
+            <AppenderRef ref="jmonitorLogFile"/>
+        </logger>
+
+        <logger name="jmonitorlogstore" level="info" additivity="false">
+            <AppenderRef ref="jmonitorLogFile"/>
+        </logger>
+
+        <logger name="upload_log" level="info" additivity="false">
+            <AppenderRef ref="ScribeAsyncAppender"/>
+            <!--<AppenderRef ref="requestAppender"/>-->
+        </logger>
+
+        <logger name="MoniterMetric" level="info" additivity="false">
+            <!--<AppenderRef ref="moniterMetricFile"/>-->
+            <AppenderRef ref="AsyncDabaiAppender"/>
+        </logger>
+
+        <root level="info" includeLocation="true">
+            <appender-ref ref="mainLogFile" />
+            <AppenderRef ref="errorLogFile" level="error"/>
+            <appender-ref ref="AsyncErrorLog" />
+        </root>
+    </loggers>
+</configuration>
