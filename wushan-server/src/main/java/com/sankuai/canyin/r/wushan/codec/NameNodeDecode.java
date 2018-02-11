@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sankuai.canyin.r.wushan.server.message.PacketHeader;
 import com.sankuai.canyin.r.wushan.server.protocol.ProtocolFactory;
-import com.sankuai.canyin.r.wushan.server.protocol.TransferDataProtocol;
 import com.sankuai.canyin.r.wushan.server.protocol.WushanProtocol;
 
 import io.netty.buffer.ByteBuf;
