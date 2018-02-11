@@ -2,8 +2,7 @@
 *.classpath
 *.project
 *.settings/
-*/*.log
+/log/
 */*.hprof
-*/target/
-*/log/
+/target/
 
