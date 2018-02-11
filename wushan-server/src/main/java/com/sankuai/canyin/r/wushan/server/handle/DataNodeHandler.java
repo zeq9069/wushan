@@ -7,6 +7,7 @@ import com.google.common.base.Charsets;
 import com.sankuai.canyin.r.wushan.server.datanode.store.StorageFactory;
 import com.sankuai.canyin.r.wushan.server.message.DataPacket;
 import com.sankuai.canyin.r.wushan.server.message.HeartbeatPakcet;
+import com.sankuai.canyin.r.wushan.service.DataNodeProtocolImpl;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -47,7 +48,6 @@ public class DataNodeHandler extends ChannelInboundHandlerAdapter{
 		}finally{
             ReferenceCountUtil.release(in);
 		}
-		
 	}
 
 	@Override

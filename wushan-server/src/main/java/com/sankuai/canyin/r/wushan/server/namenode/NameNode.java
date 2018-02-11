@@ -9,10 +9,13 @@ import com.sankuai.canyin.r.wushan.config.Configuration;
 import com.sankuai.canyin.r.wushan.server.namenode.dispatcher.Dispatcher;
 import com.sankuai.canyin.r.wushan.server.namenode.service.ClientService;
 import com.sankuai.canyin.r.wushan.server.namenode.service.NameNodeRpcService;
+import com.sankuai.canyin.r.wushan.server.namenode.service.NameNodeTransferDataRpcService;
 
 public class NameNode {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(NameNode.class);
+	
+	private NameNodeTransferDataRpcService transferService;
 	
 	private NameNodeRpcService rpcService;
 	
@@ -30,17 +33,23 @@ public class NameNode {
 		
 		config = new Configuration();
 		
-		rpcService = new NameNodeRpcService(config.getNameNodeRpcPort());
+		transferService = new NameNodeTransferDataRpcService(config.getNameNodeTransferDataRpcPort());// namenode -> datanode transfer data 
+		transferService.init();
+		 
+		clientService = new ClientService(config.getNameNodeClientRpcPort(),dispatcher);// client -> namenode transfer data or Worker
+		clientService.init();
+		
+		rpcService = new NameNodeRpcService(config.getNameNodeRpcPort());// datanode -> namenode upload db info
 		rpcService.init();
 		
-		clientService = new ClientService(config.getNameNodeClientRpcPort(),dispatcher);
-		clientService.init();
 	}
 	
 	public void start(){
 		LOG.info("starting all service...");
-		rpcService.start();
+		transferService.start();
 		clientService.start();
+		rpcService.start();
+		
 	}
 	
 	public Dispatcher getDispatcher() {

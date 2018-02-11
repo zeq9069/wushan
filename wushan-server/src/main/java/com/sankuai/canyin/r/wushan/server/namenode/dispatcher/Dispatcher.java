@@ -43,7 +43,7 @@ public class Dispatcher {
 		exec.execute(new Runnable() {
 			public void run() {
 				DataInfo dataInfo = strategy.choose(target);
-				Channel channel = ClientInfosManager.getChannel(dataInfo);
+				Channel channel = ClientInfosManager.getTransferDataChannel(dataInfo);
 				if(channel != null){
 					channel.writeAndFlush(target);
 					System.out.println("分发数量："+count.incrementAndGet());

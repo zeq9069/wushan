@@ -8,14 +8,18 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -27,7 +31,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
 import com.sankuai.canyin.r.wushan.config.Configuration;
+import com.sankuai.canyin.r.wushan.server.datanode.DataNodeClientSideService;
 import com.sankuai.canyin.r.wushan.server.message.DataPacket;
+import com.sankuai.canyin.r.wushan.service.DBInfo;
 import com.sankuai.canyin.r.wushan.thread.WushanThreadFactory;
 
 /**
@@ -70,7 +76,7 @@ public class StorageFactory {
 	
 	private static final String DEFAULT_DB_NAME = "default";
 	
-	private Map<String,Counter> current_db_size = new HashMap<String, Counter>();
+	private Map<String,Counter> current_db_size = new ConcurrentHashMap<String, Counter>();
 	
 	private static final int MAX_SIZE = 2 << 23;//byte
 	
@@ -87,17 +93,23 @@ public class StorageFactory {
 	private Configuration config;
 	
 	private ScheduledExecutorService schedule = Executors.newScheduledThreadPool(1);
+	
+	private DataNodeClientSideService protocolImpl;
 
-	public StorageFactory(Configuration config) {
+	public StorageFactory(Configuration config , DataNodeClientSideService protocolImpl) {
 		this.config = config;
 		storePath = config.getDataNodeStorePath();
+		this.protocolImpl = protocolImpl;
 	}
 	
 	public void init(){
 		schedule.scheduleAtFixedRate(new Runnable() {
 			public void run() {
-				LOG.info(">>> Timer 开始调度 <<< 目前总大小："+tmp_size+" ， key的数量 ： "+cache.size());
+				LOG.info(">>> Timer 开始调度 <<< 目前总大小："+tmp_size+" ， key的数量 ： "+cache.size()+" , db count = "+current_db_size.size());
 				schedule();
+				
+				//uploaad dbinfo
+				protocolImpl.commitDBInfo(getDBInfos());
 			}
 		}, 5, 5, TimeUnit.SECONDS);
 		
@@ -157,7 +169,7 @@ public class StorageFactory {
 		}
 	}
 	
-	public String generateCurrentParentPath(String path){
+	private String generateCurrentParentPath(String path){
 		File file = new File(path);
 		if(file.isDirectory()){
 			if(file.list().length < LEVEL_SIZE){
@@ -183,7 +195,7 @@ public class StorageFactory {
 			try {
 				LinkedBlockingQueue<DataPacket> tmpQueue = new LinkedBlockingQueue<DataPacket>();
 				this.db.put(db, tmpQueue);
-				this.current_db_size.put(db, new Counter(0));
+				this.current_db_size.get(db).clear();
 			} finally {
 				immutableLock.unlock();
 			}
@@ -308,7 +320,6 @@ public class StorageFactory {
 	
 	private void reload(){
 		LOG.info("starting reload index from disk...");
-		
 		File file = new File(storePath);
 		File[] dbFiles = file.listFiles(new FileFilter() {
 			public boolean accept(File pathname) {
@@ -319,24 +330,52 @@ public class StorageFactory {
 			}
 		});
 		
+		Map<String,FutureTask<Long>> futures = new HashMap<String,FutureTask<Long>>(dbFiles.length);
+		
 		for(final File dbDir : dbFiles){
-			reload.submit(new ReloadRunnable(dbDir));
+			FutureTask<Long> f = (FutureTask<Long>) reload.submit(new ReloadRunnable(dbDir));
+			futures.put(dbDir.getName(), f);
 		}
-		reload.shutdown();
+		
+		//TODO 并发问题
+		for(String db : futures.keySet()){
+			Counter counter = current_db_size.get(db);
+			try {
+				if(counter != null){
+					counter.clearAll();
+					counter.getAndAdd(futures.get(db).get());
+				}else{
+					counter = new Counter(futures.get(db).get());
+					current_db_size.put(db, counter);
+				}
+			} catch (Exception e) {
+				LOG.error("reload thread fialed. db = {}",db,e);
+			} 
+		}
 	}
 	
-	class ReloadRunnable implements Runnable{
+	public Set<DBInfo> getDBInfos(){
+		Set<DBInfo> dbinfos = new HashSet<DBInfo>();
+		for(String db : current_db_size.keySet()){
+			Counter counter = current_db_size.get(db);
+			dbinfos.add(new DBInfo(db.getBytes(), counter.getAllSize(),0l));
+		}
+		return dbinfos;
+	} 
+	
+	class ReloadRunnable implements Callable<Long>{
 		
-		String dbDir;
+		String db;
 		
 		private Queue<File> pendingReloadDirs = new LinkedList<File>();
 		
 		public ReloadRunnable(File dbDir) {
-			this.dbDir = dbDir.getAbsolutePath();
+			db = dbDir.getName();
 			pendingReloadDirs.add(dbDir);
 		}
 
-		public void run() {
+		public Long call() {
+			long allSize = 0;
 			while(!pendingReloadDirs.isEmpty()){
 				File file = pendingReloadDirs.poll();
 				File[] metaFiles = file.listFiles(new FileFilter() {
@@ -388,6 +427,7 @@ public class StorageFactory {
 								locationBuf.position(8);
 								long offset = locationBuf.getLong();
 								saveOffset(keyString, new Location(start, offset, metaFile.getAbsolutePath()), cache);
+								allSize+=offset;
 							}
 						}
 					} catch (FileNotFoundException e) {
@@ -404,7 +444,8 @@ public class StorageFactory {
 					}
 				}
 			}
-			LOG.info("DB {} reload over.",dbDir);
+			LOG.info("DB {} （ {} bytes）reload over.",db,allSize);
+			return allSize;
 		}
 	}
 	

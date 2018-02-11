@@ -5,6 +5,8 @@ import org.slf4j.LoggerFactory;
 
 import com.sankuai.canyin.r.wushan.Service;
 import com.sankuai.canyin.r.wushan.config.Configuration;
+import com.sankuai.canyin.r.wushan.server.datanode.DataNodeClientSideService;
+import com.sankuai.canyin.r.wushan.service.DataNodeProtocolImpl;
 
 import javassist.NotFoundException;
 
@@ -16,15 +18,18 @@ public class StoreService implements Service{
 	
 	private Configuration config;
 	
-	public StoreService(Configuration config) throws NotFoundException {
+	private DataNodeClientSideService protocolImpl;
+	
+	public StoreService(Configuration config ,DataNodeClientSideService protocolImpl) throws NotFoundException {
 		if(config == null){
 			throw new NotFoundException("config is NULL");
 		}
 		this.config = config;
+		this.protocolImpl = protocolImpl;
 	}
 	
 	public void init() {
-		storageFactory = new StorageFactory(config);
+		storageFactory = new StorageFactory(config ,protocolImpl);
 		storageFactory.init();
 	}
 

@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sankuai.canyin.r.wushan.config.Configuration;
 import com.sankuai.canyin.r.wushan.server.datanode.store.StoreService;
+import com.sankuai.canyin.r.wushan.service.DataNodeProtocolImpl;
 
 import javassist.NotFoundException;
 
@@ -15,13 +16,17 @@ import javassist.NotFoundException;
  * @author kyrin
  *
  */
-public class DataNode {
+public class DataNode{
 	
 	private static final Logger LOG = LoggerFactory.getLogger(DataNode.class);
+	
+	private DataNodeTransferDataRpcService transferService;
 	
 	private DataNodeRpcService rpcService;
 	
 	private StoreService storeService;
+	
+	DataNodeClientSideService client;
 	
 	Configuration config;
 	
@@ -32,16 +37,27 @@ public class DataNode {
 	private void init() throws IOException, NotFoundException{
 		config = new Configuration();
 		
-		storeService = new StoreService(config);
+		
+		DataNodeProtocolImpl protocolImpl = new DataNodeProtocolImpl(null);
+
+		rpcService = new DataNodeRpcService(config.getNameNodeServerHost(),config.getNameNodeRpcPort() , protocolImpl);
+		rpcService.init();
+		
+		client = new DataNodeClientSideService(protocolImpl);
+		
+		storeService = new StoreService(config , client);
 		storeService.init();
 		
-		rpcService = new DataNodeRpcService(config.getNameNodeServerHost(),config.getNameNodeRpcPort()
+		transferService = new DataNodeTransferDataRpcService(config.getNameNodeServerHost(),config.getNameNodeClientRpcPort()
 				,storeService.getStorageFactory());
+		transferService.init();
+		
 	}
 	
 	public void start(){
 		LOG.info("startup all service...");
 		rpcService.start();
+		transferService.start();
 	}
 	
 	public static void main(String[] args) throws IOException, NotFoundException {

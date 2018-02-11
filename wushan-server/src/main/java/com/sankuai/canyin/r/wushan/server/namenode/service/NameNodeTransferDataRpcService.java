@@ -9,7 +9,8 @@ import org.slf4j.LoggerFactory;
 import com.sankuai.canyin.r.wushan.Service;
 import com.sankuai.canyin.r.wushan.codec.NameNodeDecode;
 import com.sankuai.canyin.r.wushan.codec.NameNodeEncode;
-import com.sankuai.canyin.r.wushan.server.handle.NameNodeRpcServerHandler;
+import com.sankuai.canyin.r.wushan.server.handle.HeartBeatServerHandler;
+import com.sankuai.canyin.r.wushan.server.handle.NameNodeTransferDataServerHandler;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -17,8 +18,9 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 
-public class NameNodeRpcService implements Service{
+public class NameNodeTransferDataRpcService implements Service{
 	
 	private static final Logger LOG = LoggerFactory.getLogger(NameNodeTransferDataRpcService.class);
 	
@@ -33,28 +35,29 @@ public class NameNodeRpcService implements Service{
 		server = new ServerBootstrap();
 	}
 	
-	public NameNodeRpcService(int port){
+	public NameNodeTransferDataRpcService(int port){
 		this.port = port;
 	}
 	 
 	public void start(){
-		LOG.info("starting NameNodeRpcService service...");
+		LOG.info("starting NameNodeTransferDataRpcService ...");
 		server.group(bossGroup,workGroup)
 			  .channel(NioServerSocketChannel.class)
 			  .localAddress(new InetSocketAddress(port))
 			  .childHandler(new ChannelInitializer<Channel>() {
 				@Override
 				protected void initChannel(Channel ch) throws Exception {
-					ch.pipeline()
+					ch.pipeline().addLast(new IdleStateHandler(0,0,5,TimeUnit.SECONDS))
 								.addLast(new NameNodeDecode())
 								.addLast(new NameNodeEncode())
-								.addLast(new NameNodeRpcServerHandler());
+								.addLast(new HeartBeatServerHandler())
+								.addLast(new NameNodeTransferDataServerHandler());
 				}
 			});
 		try {
 			boolean future = server.bind().sync().await(1, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
-			LOG.error("An error occurred during NameNodeRpcService startup.",e);
+			LOG.error("An error occurred during NameNodeTransferDataRpcService startup.",e);
 		}
 	}
 	
