@@ -16,7 +16,7 @@ public class DefaultDispatcherStrategy implements Strategy{
 	private static final Logger LOG = LoggerFactory.getLogger(DefaultDispatcherStrategy.class);
 	
 	public DataInfo choose(Object target) {
-		DataInfo[] dataInfoArray = ClientInfosManager.toArray();
+		DataInfo[] dataInfoArray = ClientInfosManager.toArrayForTransferClient();
 		int hashcode = target == null ? 0:target.hashCode();
 		int mod = hashcode%dataInfoArray.length;
 		return dataInfoArray[mod];

@@ -48,6 +48,10 @@ public class Configuration {
 		return Integer.parseInt(value);
 	}
 	
+	public int getNameNodeTransferDataRpcPort(){
+		return getInt(constant.WUSHAN_NAMENODE_TRANSFER_DATA_RPC_PORT, constant.DEFAULT_WUSHAN_NAMENODE_TRANSFER_DATA_RPC_PORT);
+	}
+	
 	public int getNameNodeRpcPort(){
 		return getInt(constant.WUSHAN_NAMENODE_RPC_PORT, constant.DEFAULT_WUSHAN_NAMENODE_RPC_PORT);
 	}

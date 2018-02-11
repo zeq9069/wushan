@@ -1,29 +1,51 @@
 package com.sankuai.canyin.r.wushan.server.datanode.store;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class Counter {
 	
-	private AtomicInteger value;
+	private AtomicLong value ;
+	
+	private long allSize = 0;
 	
 	private long lastTimestamp; //毫秒
 	
-	
-	public Counter(int value) {
-		this.value = new AtomicInteger(value);
-		this.lastTimestamp = System.currentTimeMillis();
+	public Counter(long value) {
+		this.value = new AtomicLong(value);
+		allSize += value;
+		updateLastUpdateTimestamp();
 	}
 	
-	public int getValue() {
+	public long getValue() {
 		return value.get();
 	}
 
-	public void getAndAdd(int delta) {
+	public void getAndAdd(long delta) {
 		this.value.getAndAdd(delta);
-		this.lastTimestamp = System.currentTimeMillis();
+		allSize+=delta;
+		updateLastUpdateTimestamp();
 	}
 
 	public long getLastTimestamp() {
 		return lastTimestamp;
+	}
+	
+	public long getAllSize(){
+		return allSize;
+	}
+
+	public void clear(){
+		this.value = new AtomicLong(0);
+		updateLastUpdateTimestamp();
+	}
+	
+	public void clearAll(){
+		this.value = new AtomicLong(0);
+		this.allSize = 0;
+		updateLastUpdateTimestamp();
+	}
+	
+	private void updateLastUpdateTimestamp(){
+		this.lastTimestamp = System.currentTimeMillis();
 	}
 }

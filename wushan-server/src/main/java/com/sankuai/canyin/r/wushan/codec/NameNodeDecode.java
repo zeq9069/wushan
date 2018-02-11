@@ -2,6 +2,9 @@ package com.sankuai.canyin.r.wushan.codec;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sankuai.canyin.r.wushan.server.message.PacketHeader;
 import com.sankuai.canyin.r.wushan.server.protocol.ProtocolFactory;
 import com.sankuai.canyin.r.wushan.server.protocol.TransferDataProtocol;
@@ -10,10 +13,11 @@ import com.sankuai.canyin.r.wushan.server.protocol.WushanProtocol;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
-import io.netty.util.ReferenceCountUtil;
 
 public class NameNodeDecode extends ByteToMessageDecoder{
 
+	private static final Logger LOG = LoggerFactory.getLogger(NameNodeDecode.class);
+	
 	@Override
 	protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
 		if(msg.readableBytes()<=PacketHeader.HEADER_PROTO){
@@ -25,7 +29,7 @@ public class NameNodeDecode extends ByteToMessageDecoder{
 		
 		if(!res){
 			msg.resetReaderIndex();
-			System.out.println("未知消息类型，丢弃");
+			LOG.error("unknown message type , Please check message Header. Give up it !");
 			return;
 		}
 		
@@ -34,7 +38,7 @@ public class NameNodeDecode extends ByteToMessageDecoder{
 		WushanProtocol proto = ProtocolFactory.getProtocol(proto_type);
 		
 		if(proto == null){
-			System.out.println("未知的消息协议类型，丢弃");
+			LOG.error("unknown protocol type , Please check message Header. Give up it !");
 			return;
 		}
 		
