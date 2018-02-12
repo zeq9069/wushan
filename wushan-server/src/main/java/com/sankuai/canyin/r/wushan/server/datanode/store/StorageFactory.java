@@ -31,9 +31,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
 import com.sankuai.canyin.r.wushan.config.Configuration;
-import com.sankuai.canyin.r.wushan.server.datanode.DataNodeClientSideService;
 import com.sankuai.canyin.r.wushan.server.message.DataPacket;
 import com.sankuai.canyin.r.wushan.service.DBInfo;
+import com.sankuai.canyin.r.wushan.service.DataNodeClientSideService;
 import com.sankuai.canyin.r.wushan.thread.WushanThreadFactory;
 
 /**

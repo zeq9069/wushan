@@ -5,8 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sankuai.canyin.r.wushan.Service;
 import com.sankuai.canyin.r.wushan.config.Configuration;
-import com.sankuai.canyin.r.wushan.server.datanode.DataNodeClientSideService;
-import com.sankuai.canyin.r.wushan.service.DataNodeProtocolImpl;
+import com.sankuai.canyin.r.wushan.service.DataNodeClientSideService;
 
 import javassist.NotFoundException;
 

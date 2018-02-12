@@ -4,7 +4,7 @@ import java.util.Set;
 
 import com.sankuai.canyin.r.wushan.server.datanode.exception.ConnectionCloseExeception;
 
-public interface DataNodeProtocol {
+public interface DataNodeService {
 	
 	public void commitDBInfo(Set<DBInfo> dbInfos) throws ConnectionCloseExeception;
 	

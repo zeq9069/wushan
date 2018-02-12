@@ -1,4 +1,4 @@
-package com.sankuai.canyin.r.wushan.server.datanode;
+package com.sankuai.canyin.r.wushan.service;
 
 import java.util.Set;
 
@@ -6,17 +6,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sankuai.canyin.r.wushan.server.datanode.exception.ConnectionCloseExeception;
-import com.sankuai.canyin.r.wushan.service.DBInfo;
-import com.sankuai.canyin.r.wushan.service.DataNodeProtocol;
-import com.sankuai.canyin.r.wushan.service.DataNodeProtocolImpl;
 
-public class DataNodeClientSideService implements DataNodeProtocol{
+public class DataNodeClientSideService implements DataNodeService{
 
 	private static final Logger LOG = LoggerFactory.getLogger(DataNodeClientSideService.class);
 	
-	private DataNodeProtocolImpl impl;
+	private DataNodeServiceImpl impl;
 	
-	public DataNodeClientSideService(DataNodeProtocolImpl impl) {
+	public DataNodeClientSideService(DataNodeServiceImpl impl) {
 		this.impl = impl;
 	}
 	

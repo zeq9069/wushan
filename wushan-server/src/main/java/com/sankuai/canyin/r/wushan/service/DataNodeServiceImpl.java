@@ -4,8 +4,6 @@ import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
 import com.sankuai.canyin.r.wushan.server.datanode.exception.ConnectionCloseExeception;
-import com.sankuai.canyin.r.wushan.server.protocol.DBInfoProtocol;
-import com.sankuai.canyin.r.wushan.server.protocol.ProtocolFactory;
 
 import io.netty.channel.Channel;
 
@@ -14,13 +12,13 @@ import io.netty.channel.Channel;
  * @author kyrin
  *
  */
-public class DataNodeProtocolImpl implements DataNodeProtocol{
+public class DataNodeServiceImpl implements DataNodeService{
 
 	private Channel channel;
 	
 	private ReentrantLock lock = new ReentrantLock();//多线程情况下，使用lock避免数据包被拆分
 	
-	public DataNodeProtocolImpl(Channel channel){
+	public DataNodeServiceImpl(Channel channel){
 		refreshCon(channel);
 	}
 	

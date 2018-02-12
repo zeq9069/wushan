@@ -3,7 +3,7 @@ package com.sankuai.canyin.r.wushan.server.handle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sankuai.canyin.r.wushan.service.DataNodeProtocolImpl;
+import com.sankuai.canyin.r.wushan.service.DataNodeServiceImpl;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -16,9 +16,9 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 public class DataNodeRpcHandler extends ChannelInboundHandlerAdapter{
 
 	private static final Logger LOG = LoggerFactory.getLogger(DataNodeRpcHandler.class);
-	private DataNodeProtocolImpl protocolImpl;
+	private DataNodeServiceImpl protocolImpl;
 	
-	public DataNodeRpcHandler(DataNodeProtocolImpl protocolImpl) {
+	public DataNodeRpcHandler(DataNodeServiceImpl protocolImpl) {
 		this.protocolImpl = protocolImpl;
 	}
 	

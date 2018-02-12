@@ -1,7 +1,5 @@
 package com.sankuai.canyin.r.wushan.server.message;
 
-import groovy.ui.SystemOutputInterceptor;
-
 /**
  * 心跳包
  * 收集每台datanode机器上的物理资源

@@ -12,6 +12,8 @@ import com.google.common.base.Charsets;
  */
 public class DataPacket implements Serializable{
 	
+	private static final long serialVersionUID = -8168592822451034102L;
+
 	byte[] db;
 	
 	byte[] key;

@@ -6,8 +6,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sankuai.canyin.r.wushan.config.Configuration;
+import com.sankuai.canyin.r.wushan.server.datanode.service.DataNodeRpcService;
+import com.sankuai.canyin.r.wushan.server.datanode.service.DataNodeTransferDataRpcService;
 import com.sankuai.canyin.r.wushan.server.datanode.store.StoreService;
-import com.sankuai.canyin.r.wushan.service.DataNodeProtocolImpl;
+import com.sankuai.canyin.r.wushan.service.DataNodeClientSideService;
+import com.sankuai.canyin.r.wushan.service.DataNodeServiceImpl;
 
 import javassist.NotFoundException;
 
@@ -38,7 +41,7 @@ public class DataNode{
 		config = new Configuration();
 		
 		
-		DataNodeProtocolImpl protocolImpl = new DataNodeProtocolImpl(null);
+		DataNodeServiceImpl protocolImpl = new DataNodeServiceImpl(null);
 
 		rpcService = new DataNodeRpcService(config.getNameNodeServerHost(),config.getNameNodeRpcPort() , protocolImpl);
 		rpcService.init();
