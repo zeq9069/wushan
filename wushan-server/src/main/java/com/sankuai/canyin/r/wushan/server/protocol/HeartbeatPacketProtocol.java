@@ -24,9 +24,8 @@ public class HeartbeatPacketProtocol implements WushanProtocol{
 		}
 		
 		HeartbeatPakcet data = (HeartbeatPakcet)msg;
-
 		
-		int bodyLen = 4 + ( 4 + 4 ) + ( 4 + 8 ) + ( 4 + 4 ) + ( 4 +8 ) + (4 + 8);
+		int bodyLen = 4 + 4 + 8 + 4 + 8 + 4 + 8 + 8;
 		
 		int allLen = PacketHeader.HEADER_PROTO + bodyLen;
 		
@@ -36,24 +35,18 @@ public class HeartbeatPacketProtocol implements WushanProtocol{
 		
 		buf.writeInt(bodyLen);
 		
-		buf.writeInt(4);
-		
 		buf.writeInt(data.getCpu());
-		
-		buf.writeInt(8);
 		
 		buf.writeDouble(data.getCpuLoad());
 		
-		buf.writeInt(4);
-		
 		buf.writeInt(data.getMemory());
-		
-		buf.writeInt(8);
 		
 		buf.writeDouble(data.getMemoryLoad());
 		
-		buf.writeInt(8);
-
+		buf.writeInt(data.getDisk());
+		
+		buf.writeDouble(data.getDiskLoad());
+		
 		buf.writeLong(data.getLastDatetime());
 
 		return buf;
@@ -67,22 +60,21 @@ public class HeartbeatPacketProtocol implements WushanProtocol{
 			return null;
 		}
 		
-		buf.readInt();
 		int cpu = buf.readInt();
 		
-		buf.readInt();
 		double cpuLoad = buf.readDouble();
 		
-		buf.readInt();
 		int memory = buf.readInt();
 		
-		buf.readInt();
 		double memoryLoad = buf.readDouble();
 		
-		buf.readInt();
+		int disk = buf.readInt();
+		
+		double diskLoad = buf.readDouble();
+		
 		long lastDatetime = buf.readLong();
 		
-		return new HeartbeatPakcet(cpu, cpuLoad, memory, memoryLoad , lastDatetime);
+		return new HeartbeatPakcet(cpu, cpuLoad, memory, memoryLoad , disk, diskLoad , lastDatetime);
 	}
 
 }

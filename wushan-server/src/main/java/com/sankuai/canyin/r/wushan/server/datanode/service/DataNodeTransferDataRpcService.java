@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import com.sankuai.canyin.r.wushan.Service;
 import com.sankuai.canyin.r.wushan.codec.NameNodeDecode;
 import com.sankuai.canyin.r.wushan.codec.NameNodeEncode;
+import com.sankuai.canyin.r.wushan.server.datanode.SystemInfo;
 import com.sankuai.canyin.r.wushan.server.datanode.store.StorageFactory;
 import com.sankuai.canyin.r.wushan.server.handle.DataNodeHandler;
 
@@ -41,16 +42,18 @@ public class DataNodeTransferDataRpcService implements Service{
 	private String host;
 	private int port;
 	private StorageFactory factory;
+	private SystemInfo sysInfo;
 
 	static{
 		work = new NioEventLoopGroup();
 		boot = new Bootstrap();
 	}
 	
-	public DataNodeTransferDataRpcService(String host , int port , StorageFactory factory) {
+	public DataNodeTransferDataRpcService(String host , int port , StorageFactory factory , SystemInfo sysInfo) {
 		this.host = host;
 		this.port = port;
 		this.factory = factory;
+		this.sysInfo = sysInfo;
 	}
 	
 	public void start(){
@@ -80,7 +83,7 @@ public class DataNodeTransferDataRpcService implements Service{
 					})
 					.addLast(new NameNodeDecode())
 					.addLast(new NameNodeEncode())
-					.addLast(new DataNodeHandler(factory));
+					.addLast(new DataNodeHandler(factory , sysInfo));
 				}
 			});
 		try {

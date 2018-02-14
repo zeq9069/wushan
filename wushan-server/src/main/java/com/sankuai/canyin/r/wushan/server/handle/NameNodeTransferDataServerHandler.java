@@ -45,6 +45,7 @@ public class NameNodeTransferDataServerHandler extends ChannelInboundHandlerAdap
 		super.channelRead(ctx, msg);
 		InetSocketAddress addr = (InetSocketAddress)ctx.channel().remoteAddress();
 		if(msg instanceof HeartbeatPakcet){
+			LOG.info("接收到datanode的心跳包：{}",msg);
 			ClientInfosManager.updateHeartbeat(addr.getAddress().getHostAddress(),addr.getPort(), (HeartbeatPakcet)msg);
 		}
 	}

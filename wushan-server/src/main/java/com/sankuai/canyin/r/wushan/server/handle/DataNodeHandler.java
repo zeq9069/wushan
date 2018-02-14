@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
+import com.sankuai.canyin.r.wushan.server.datanode.SystemInfo;
 import com.sankuai.canyin.r.wushan.server.datanode.store.StorageFactory;
 import com.sankuai.canyin.r.wushan.server.message.DataPacket;
 import com.sankuai.canyin.r.wushan.server.message.HeartbeatPakcet;
@@ -19,16 +20,13 @@ public class DataNodeHandler extends ChannelInboundHandlerAdapter{
 	private static final Logger LOG = LoggerFactory.getLogger(DataNodeHandler.class);
 	
 	private StorageFactory factory;
+	private SystemInfo sysInfo;
 	
-	public DataNodeHandler(StorageFactory factory) {
+	public DataNodeHandler(StorageFactory factory , SystemInfo sysInfo) {
 		this.factory = factory;
+		this.sysInfo = sysInfo;
 	}
 	
-	@Override
-	public void channelActive(ChannelHandlerContext ctx) throws Exception {
-		System.out.println("EchoClientHandler -> channelActive");
-	}
-
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
 		cause.printStackTrace();
@@ -43,15 +41,12 @@ public class DataNodeHandler extends ChannelInboundHandlerAdapter{
 				factory.put(data.getDbString(),new String(data.getKey(),Charsets.UTF_8), data.getData());
 			}else if(in instanceof HeartbeatPakcet){
 				LOG.info(" recieve heartbeat => "+((HeartbeatPakcet)in).getCpu());
+				ctx.writeAndFlush(new HeartbeatPakcet(sysInfo.getCpu() ,sysInfo.getCpuLoad(),sysInfo.getMemory(), sysInfo.getMemoryLoad(),
+						sysInfo.getDisk() , sysInfo.getDiskLoad() , sysInfo.getLastUpdateTimestamp()));
 			}
 		}finally{
             ReferenceCountUtil.release(in);
 		}
 	}
 
-	@Override
-	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-		System.out.println("EchoClientHandler -> channelInactive");
-	}
-	
 }

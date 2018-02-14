@@ -321,6 +321,9 @@ public class StorageFactory {
 	private void reload(){
 		LOG.info("starting reload index from disk...");
 		File file = new File(storePath);
+		if(!file.exists()){
+			return;
+		}
 		File[] dbFiles = file.listFiles(new FileFilter() {
 			public boolean accept(File pathname) {
 				if(pathname.isDirectory()){

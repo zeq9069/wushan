@@ -31,6 +31,8 @@ public class DataNode{
 	
 	DataNodeClientSideService client;
 	
+	SystemInfo sysInfo;
+	
 	Configuration config;
 	
 	public DataNode() throws IOException, NotFoundException {
@@ -39,6 +41,9 @@ public class DataNode{
 	
 	private void init() throws IOException, NotFoundException{
 		config = new Configuration();
+
+		sysInfo = new SystemInfo();
+		sysInfo.init();
 		
 		
 		DataNodeServiceImpl protocolImpl = new DataNodeServiceImpl(null);
@@ -51,8 +56,8 @@ public class DataNode{
 		storeService = new StoreService(config , client);
 		storeService.init();
 		
-		transferService = new DataNodeTransferDataRpcService(config.getNameNodeServerHost(),config.getNameNodeClientRpcPort()
-				,storeService.getStorageFactory());
+		transferService = new DataNodeTransferDataRpcService(config.getNameNodeServerHost(),config.getNameNodeTransferDataRpcPort()
+				,storeService.getStorageFactory() , sysInfo);
 		transferService.init();
 		
 	}

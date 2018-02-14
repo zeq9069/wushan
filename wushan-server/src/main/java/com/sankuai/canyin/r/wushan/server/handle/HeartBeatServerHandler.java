@@ -19,7 +19,7 @@ public class HeartBeatServerHandler extends ChannelInboundHandlerAdapter{
 			IdleStateEvent ise = (IdleStateEvent)evt;
 			if(ise.state() == IdleState.ALL_IDLE){
 				LOG.info("send heartbeat to {}",ctx.channel().remoteAddress().toString()); 
-	           ctx.writeAndFlush(new HeartbeatPakcet(0, 0 , 0 , 0 ,System.currentTimeMillis()));
+	           ctx.writeAndFlush(new HeartbeatPakcet(0, 0 , 0 , 0 , 0 , 0 ,System.currentTimeMillis()));
 			}
 		}else{
 			super.userEventTriggered(ctx, evt);
