@@ -28,6 +28,7 @@ public final class ClientInfosManager {
 
 	private static DataInfo[] tmp = new DataInfo[0];
 
+	//TODO 按照LRU，保存一段历史信息
 	private static final Map<String, HeartbeatPakcet> heartbeat = new ConcurrentHashMap<String, HeartbeatPakcet>();
 
 	public static void registClient(String host, int port, Channel channel) {
