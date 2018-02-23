@@ -3,7 +3,8 @@ package com.sankuai.canyin.r.wushan.service;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.sankuai.canyin.r.wushan.server.datanode.exception.ConnectionCloseExeception;
+import com.sankuai.canyin.r.wushan.server.exception.ConnectionCloseExeception;
+import com.sankuai.canyin.r.wushan.server.worker.Task;
 
 import io.netty.channel.Channel;
 
@@ -41,6 +42,16 @@ public class DataNodeServiceImpl implements DataNodeService{
 	private void checkConn() throws ConnectionCloseExeception{
 		if(channel == null || !channel.isOpen()){
 			throw new ConnectionCloseExeception("The connection of datanode and namenode closed.");
+		}
+	}
+
+	public void uploadTask(Task task) throws ConnectionCloseExeception{
+		checkConn();
+		lock.lock();
+		try{
+			channel.writeAndFlush(task);
+		}finally{
+			lock.unlock();
 		}
 	}
 }

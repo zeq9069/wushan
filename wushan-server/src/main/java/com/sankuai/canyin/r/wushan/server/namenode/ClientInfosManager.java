@@ -43,6 +43,10 @@ public final class ClientInfosManager {
 		return rpcClients.values();
 	}
 	
+	public static Channel getRpcClientConn(String key){
+		return rpcClients.get(key);
+	}
+	
 	public static void registTransferDataClient(String host, int port, Channel channel) {
 		transferDataClients.put(host + ":" + port, channel);
 		rebuildArray();
@@ -65,6 +69,10 @@ public final class ClientInfosManager {
 		sets.add(info);
 	}
 	
+	public static Map<String, Set<DBInfo>> getDbinfos() {
+		return dbInfos;
+	}
+
 	private static void rebuildArray(){
 		DataInfo[] t = new DataInfo[transferDataClients.size()];
 		int i = 0;

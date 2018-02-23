@@ -8,10 +8,11 @@ package com.snakuai.canyin.r.wushan.client.protocol;
  */
 public final class ProtocolFactory {
 	
-	private static WushanProtocol[]  protocols = new WushanProtocol[2]; 
+	private static WushanProtocol[]  protocols = new WushanProtocol[4]; 
 	
 	static{
 		registerProtocol(TransferDataProtocol.TYPE,new TransferDataProtocol());
+		registerProtocol(TaskProtocol.TYPE,new TaskProtocol());
 	}
 	
 	private static void registerProtocol(int type , WushanProtocol proto){

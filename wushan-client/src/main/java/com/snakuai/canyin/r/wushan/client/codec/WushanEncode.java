@@ -1,7 +1,9 @@
 package com.snakuai.canyin.r.wushan.client.codec;
 
 import com.snakuai.canyin.r.wushan.client.message.DataPacket;
+import com.snakuai.canyin.r.wushan.client.message.Task;
 import com.snakuai.canyin.r.wushan.client.protocol.ProtocolFactory;
+import com.snakuai.canyin.r.wushan.client.protocol.TaskProtocol;
 import com.snakuai.canyin.r.wushan.client.protocol.TransferDataProtocol;
 
 import io.netty.buffer.ByteBuf;
@@ -20,6 +22,8 @@ public class WushanEncode extends MessageToByteEncoder<Object>{
 
 		if(msg instanceof DataPacket){
 			buf = ProtocolFactory.getProtocol(TransferDataProtocol.TYPE).encode(msg);
+		}else if(msg instanceof Task){
+			buf = ProtocolFactory.getProtocol(TaskProtocol.TYPE).encode(msg);
 		}
 		
 		if(buf != null){

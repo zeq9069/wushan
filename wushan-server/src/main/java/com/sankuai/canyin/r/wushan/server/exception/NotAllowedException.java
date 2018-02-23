@@ -1,4 +1,4 @@
-package com.sankuai.canyin.r.wushan.server.datanode.exception;
+package com.sankuai.canyin.r.wushan.server.exception;
 
 public class NotAllowedException extends RuntimeException{
 

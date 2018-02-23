@@ -3,6 +3,7 @@ package com.sankuai.canyin.r.wushan.server.handle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sankuai.canyin.r.wushan.server.worker.Task;
 import com.sankuai.canyin.r.wushan.service.DataNodeServiceImpl;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -36,7 +37,16 @@ public class DataNodeRpcHandler extends ChannelInboundHandlerAdapter{
 
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object in) throws Exception {
-		//TODO receive namenode response
+		if(in instanceof Task){
+			LOG.info("DataNode receive a Task. Task = {}",in);
+			//TODO datanode 处理 task
+			
+			
+			
+			
+			
+		}
+		
 	}
 
 	@Override

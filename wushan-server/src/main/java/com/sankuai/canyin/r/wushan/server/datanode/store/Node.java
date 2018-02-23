@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.sankuai.canyin.r.wushan.server.datanode.exception.NotAllowedException;
+import com.sankuai.canyin.r.wushan.server.exception.NotAllowedException;
 
 public class Node {
 	

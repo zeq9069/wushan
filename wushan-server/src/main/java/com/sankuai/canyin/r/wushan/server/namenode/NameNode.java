@@ -10,6 +10,7 @@ import com.sankuai.canyin.r.wushan.server.namenode.dispatcher.Dispatcher;
 import com.sankuai.canyin.r.wushan.server.namenode.service.ClientService;
 import com.sankuai.canyin.r.wushan.server.namenode.service.NameNodeRpcService;
 import com.sankuai.canyin.r.wushan.server.namenode.service.NameNodeTransferDataRpcService;
+import com.sankuai.canyin.r.wushan.server.worker.TaskManager;
 
 public class NameNode {
 	
@@ -22,6 +23,8 @@ public class NameNode {
 	private ClientService clientService;
 	
 	Dispatcher dispatcher = new Dispatcher();
+	
+	private TaskManager taskManager = new TaskManager();
 	
 	Configuration config;
 	
@@ -36,7 +39,7 @@ public class NameNode {
 		transferService = new NameNodeTransferDataRpcService(config.getNameNodeTransferDataRpcPort());// namenode -> datanode transfer data 
 		transferService.init();
 		 
-		clientService = new ClientService(config.getNameNodeClientRpcPort(),dispatcher);// client -> namenode transfer data or Worker
+		clientService = new ClientService(config.getNameNodeClientRpcPort(),dispatcher , taskManager);// client -> namenode transfer data or Worker
 		clientService.init();
 		
 		rpcService = new NameNodeRpcService(config.getNameNodeRpcPort());// datanode -> namenode upload db info

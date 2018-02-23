@@ -11,6 +11,7 @@ import com.sankuai.canyin.r.wushan.codec.NameNodeDecode;
 import com.sankuai.canyin.r.wushan.codec.NameNodeEncode;
 import com.sankuai.canyin.r.wushan.server.handle.ClientServerHandler;
 import com.sankuai.canyin.r.wushan.server.namenode.dispatcher.Dispatcher;
+import com.sankuai.canyin.r.wushan.server.worker.TaskManager;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -28,6 +29,8 @@ public class ClientService implements Service{
 	private static EventLoopGroup workGroup ;
 	private static ServerBootstrap server ;
 	private Dispatcher dispatcher;
+	private TaskManager taskManager;
+	
 	
 	static{
 		bossGroup =  new NioEventLoopGroup();
@@ -35,9 +38,10 @@ public class ClientService implements Service{
 		server = new ServerBootstrap();
 	}
 	
-	public ClientService(int port , Dispatcher dispatcher){
+	public ClientService(int port , Dispatcher dispatcher , TaskManager taskManager){
 		this.port = port;
 		this.dispatcher = dispatcher;
+		this.taskManager = taskManager;
 	}
 	 
 	public void start(){
@@ -50,7 +54,7 @@ public class ClientService implements Service{
 				protected void initChannel(Channel ch) throws Exception {
 					ch.pipeline().addLast(new NameNodeDecode())
 								.addLast(new NameNodeEncode())
-								.addLast(new ClientServerHandler(dispatcher));
+								.addLast(new ClientServerHandler(dispatcher , taskManager));
 				}
 			});
 		try {
