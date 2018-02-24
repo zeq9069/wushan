@@ -1,5 +1,8 @@
 package com.snakuai.canyin.r.wushan.client;
 
+import java.util.Map;
+import java.util.Set;
+
 import com.snakuai.canyin.r.wushan.client.message.DataPacket;
 import com.snakuai.canyin.r.wushan.client.message.Task;
 
@@ -37,8 +40,8 @@ public class ClientManager {
 		public void send(DataPacket packet) throws Exception {
 			channel.getChannel().writeAndFlush(packet);
 		}
-		public void uploadTask(Task task) throws Exception {
-			channel.getChannel().writeAndFlush(task);
+		public void uploadExpression(String expression, Set<String> dbs, Map<String, Object> params) throws Exception {
+			channel.getChannel().writeAndFlush(new Task(expression, dbs, params));
 		}
 	}
 	

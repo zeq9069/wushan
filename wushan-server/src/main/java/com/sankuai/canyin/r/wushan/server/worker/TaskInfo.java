@@ -8,8 +8,6 @@ public class TaskInfo implements Serializable{
 	
 	private static final long serialVersionUID = -5115191310535777315L;
 
-	private String id;
-	
 	private Task task;
 	
 	private DBHandleStatus status;
@@ -18,24 +16,15 @@ public class TaskInfo implements Serializable{
 	
 	private long timestamp;//创建时间
 	
-	public TaskInfo(String id , Task task) {
-		this(id, task, DBHandleStatus.WAITING, null);
+	public TaskInfo( Task task) {
+		this(task, DBHandleStatus.WAITING, null);
 	}
 	
-	public TaskInfo(String id , Task task , DBHandleStatus status , Map<String, Set<Db>> handleDb) {
-		this.id = id;
+	public TaskInfo(Task task , DBHandleStatus status , Map<String, Set<Db>> handleDb) {
 		this.task = task;
 		this.status = status;
 		this.handleDb = handleDb;
 		this.timestamp = System.currentTimeMillis();
-	}
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
 	}
 
 	public Task getTask() {

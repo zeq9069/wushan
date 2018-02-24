@@ -38,14 +38,13 @@ public class TaskManager {
 			throw new TaskNotNullException("Task can't be null.");
 		}
 		String taskId = TaskIdUtils.generateTaskId();
-		TaskInfo taskInfo = new TaskInfo(taskId, task);
+		task.setId(taskId);
+		TaskInfo taskInfo = new TaskInfo(task);
 		tasks.put(taskId, taskInfo);
-		
 		lock.lock();
 		try {
 			Map<String, Set<Db>> assignDb = taskSchedule.assign(task);
 			taskInfo.setHandleDb(assignDb);
-
 			for (String key : assignDb.keySet()) {
 				Channel channel = ClientInfosManager.getRpcClientConn(key);
 				Set<String> dbnames = new HashSet<String>();

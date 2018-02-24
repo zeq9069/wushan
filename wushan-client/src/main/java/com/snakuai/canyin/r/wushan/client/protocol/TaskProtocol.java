@@ -33,6 +33,8 @@ public class TaskProtocol implements WushanProtocol {
 		}
 
 		Task task = (Task) msg;
+		
+		int idLen = task.getId() == null ? 0 : task.getId().getBytes(Charset.forName("UTF-8")).length ;
 
 		int exprLen = task.getExpression().getBytes(Charset.forName("UTF-8")).length;
 
@@ -59,7 +61,7 @@ public class TaskProtocol implements WushanProtocol {
 			}
 		}
 
-		int bodyLen = 4 + (4 + exprLen) + (4 + 4 + 4 * task.getDbs().size() + dbLen)
+		int bodyLen = 4 + ( 4 + idLen ) + (4 + exprLen) + (4 + 4 + 4 * task.getDbs().size() + dbLen)
 				+ (4 + 4 + (4 + 4) * task.getParams().size() + paramsLen);
 
 		int allLen = PacketHeader.HEADER_PROTO + bodyLen;
@@ -69,7 +71,12 @@ public class TaskProtocol implements WushanProtocol {
 		PacketHeader.writeHeader(buf, (byte) PacketType.REQUEST.getType(), TYPE);
 
 		buf.writeInt(bodyLen);
-
+		
+		buf.writeInt(idLen);
+		
+		if(idLen > 0){
+			buf.writeBytes(task.getId().getBytes(Charset.forName("UTF-8")));
+		}
 		buf.writeInt(exprLen);
 
 		buf.writeBytes(task.getExpression().getBytes(Charset.forName("UTF-8")));
@@ -115,10 +122,18 @@ public class TaskProtocol implements WushanProtocol {
 	}
 
 	public Object decode(ByteBuf buf) {
-		if(buf.readableBytes() < 37){
+		if(buf.readableBytes() < 41){
 			return null;
 		}
 		buf.skipBytes(4);
+		
+		int idLen = buf.readInt();
+		byte[] id = null;
+		if(idLen > 0){
+			id = new byte[idLen];
+			buf.readBytes(id);
+		}
+		
 		int exprlen = buf.readInt();
 		byte[] expression = new byte[exprlen];
 		buf.readBytes(expression);
@@ -156,7 +171,7 @@ public class TaskProtocol implements WushanProtocol {
 			} catch (ClassNotFoundException e) {
 			}
 		}
-		return new Task(new String(expression,Charset.forName("UTF-8")), dbs, params);
+		return new Task(new String(id),new String(expression,Charset.forName("UTF-8")), dbs, params);
 	}
 	
 }
