@@ -51,7 +51,7 @@ public class StorageFactory {
 	
 	private Map<String , DataFile> cache = new ConcurrentHashMap<String, DataFile>();//索引偏移量缓存
 
-	private volatile Map<String, DataFile> offset = new ConcurrentHashMap<String, DataFile>();
+	private volatile Map<String , Map<String, DataFile>> offset = new ConcurrentHashMap<String , Map<String, DataFile>>();
 
 	private Map<String,Queue<DataPacket>> db = new ConcurrentHashMap<String, Queue<DataPacket>>();
 	
@@ -152,8 +152,6 @@ public class StorageFactory {
 		}
 	}
 	
-	
-	
 	private void saveOffset(String key, Location value , Map<String , DataFile> map){
 		offsetLock.lock();
 		try {
@@ -207,7 +205,7 @@ public class StorageFactory {
 			Iterator<DataPacket> it = target.iterator();
 			RandomAccessFile dataFile = current_open_files.get(db).getData();
 			while (it.hasNext()) {
-				write(dataFile,it.next());
+				write(dataFile,it.next(),db);
 			}
 			// 2.判断持久化文件是否达到最大值
 			checkFile(db,force);
@@ -251,7 +249,7 @@ public class StorageFactory {
 				sync.execute(new Runnable() {
 					public void run() {
 						try {
-							syncIndex(target);
+							syncIndex(target , db);
 						} catch (IOException e) {
 							LOG.info("persistent index failed. db = {} , indexFile = {}",db,target,e);
 						}
@@ -274,13 +272,13 @@ public class StorageFactory {
 		LOG.info("create new file : data = {} , meta = {}",currentDataPath,currentMetaPath);
 	}
 	
-	private void syncIndex(final RandomAccessFile idx) throws IOException {
+	private void syncIndex(final RandomAccessFile idx , final String db) throws IOException {
 		LOG.info("start sync index.indexFile = {}",idx);
 		offsetLock.lock();
 		Map<String, DataFile> target = null;
 		try {
-			target = offset;
-			offset = new ConcurrentHashMap<String, DataFile>();
+			target = offset.remove(db);
+			offset.put(db, new ConcurrentHashMap<String, DataFile>());
 		} finally {
 			offsetLock.unlock();
 		}
@@ -299,7 +297,7 @@ public class StorageFactory {
 		}
 	}
 	
-	private void write(RandomAccessFile dataFile,DataPacket packet){
+	private void write(RandomAccessFile dataFile,DataPacket packet , String dbName){
 		if(packet == null){
 			return;
 		}
@@ -308,9 +306,14 @@ public class StorageFactory {
 				//TODO path参数为空？
 				Location value = new Location(dataFile.length(),val.length , null);
 				dataFile.write(val);
+				
 				//TODO 待优化
-				saveOffset(packet.getKeyString() , value , offset);
-				saveOffset(packet.getKeyString() , value , cache);
+				String keyString = packet.getKeyString();
+				if(!offset.containsKey(dbName)){
+					offset.put(dbName, new ConcurrentHashMap<String, DataFile>());
+				}
+				saveOffset(keyString , value , offset.get(dbName));
+				saveOffset(keyString , value , cache);
 		} catch (FileNotFoundException e) {
 			LOG.error("data file not found. dataFile = {} , packet = {}",dataFile,packet,e);
 		}catch(IOException e){

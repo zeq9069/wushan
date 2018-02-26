@@ -68,6 +68,10 @@ public class Configuration {
 		return getString(constant.WUSHAN_DATANODE_STORE_PATH, constant.DEFAULT_WUSHAN_DATANODE_STORE_PATH);
 	}
 	
+	public int getDataNodeWorkerRpcPort(){
+		return getInt(constant.WUSHAN_DATANODE_WORKER_RPC_PORT, constant.DEFAULT_WUSHAN_DATANODE_WORKER_RPC_PORT);
+	}
+	
 	public void clear(){
 		properties.clear();
 	}

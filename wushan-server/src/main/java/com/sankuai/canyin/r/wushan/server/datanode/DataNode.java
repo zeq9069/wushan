@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import com.sankuai.canyin.r.wushan.config.Configuration;
 import com.sankuai.canyin.r.wushan.server.datanode.service.DataNodeRpcService;
 import com.sankuai.canyin.r.wushan.server.datanode.service.DataNodeTransferDataRpcService;
+import com.sankuai.canyin.r.wushan.server.datanode.service.WorkerManager;
+import com.sankuai.canyin.r.wushan.server.datanode.service.WorkerService;
 import com.sankuai.canyin.r.wushan.server.datanode.store.StoreService;
 import com.sankuai.canyin.r.wushan.service.DataNodeClientSideService;
 import com.sankuai.canyin.r.wushan.service.DataNodeServiceImpl;
@@ -35,16 +37,21 @@ public class DataNode{
 	
 	Configuration config;
 	
+	WorkerService workerService;
+	
+	WorkerManager workerManager;
+	
 	public DataNode() throws IOException, NotFoundException {
 		init();
 	}
 	
 	private void init() throws IOException, NotFoundException{
 		config = new Configuration();
+		workerManager = new WorkerManager();
 
+		
 		sysInfo = new SystemInfo();
 		sysInfo.init();
-		
 		
 		DataNodeServiceImpl protocolImpl = new DataNodeServiceImpl(null);
 
@@ -60,12 +67,16 @@ public class DataNode{
 				,storeService.getStorageFactory() , sysInfo);
 		transferService.init();
 		
+		workerService = new WorkerService(config.getDataNodeWorkerRpcPort() , workerManager);
+		workerService.init();
+		
 	}
 	
 	public void start(){
 		LOG.info("startup all service...");
 		rpcService.start();
 		transferService.start();
+		workerService.start();
 	}
 	
 	public static void main(String[] args) throws IOException, NotFoundException {

@@ -11,6 +11,9 @@ public class ConfigConstant {
 	public static final String WUSHAN_NAMENODE_RPC_PORT= "wushan.namenode.rpc.port";
 	public static final int DEFAULT_WUSHAN_NAMENODE_RPC_PORT= 8787;
 	
+	public static final String WUSHAN_DATANODE_WORKER_RPC_PORT = "wushan.datanode.worker.rpc.port";
+	public static final int DEFAULT_WUSHAN_DATANODE_WORKER_RPC_PORT = 8416;
+	
 	// client -> namenode transfer Data Or Task service port
 	public static final String WUSHAN_NAMENODE_CLIENT_RPC_PORT= "wushan.namenode.client.rpc.port";
 	public static final int DEFAULT_WUSHAN_NAMENODE_CLIENT_RPC_PORT = 6789;

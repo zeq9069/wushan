@@ -45,7 +45,7 @@ public class ClientServerHandler extends ChannelInboundHandlerAdapter{
 		super.channelRead(ctx, msg);
 		if(msg instanceof DataPacket){
 			dispatcher.dispatch(msg);
-		}if(msg instanceof Task){
+		}else if(msg instanceof Task){
 			LOG.info("namenode receive a Task. TASK = {}",msg);
 			taskManager.upload((Task)msg);
 		}else{
