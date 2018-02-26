@@ -1,14 +1,21 @@
 package com.sankuai.canyin.r.wushan.server.worker;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Queue;
-import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Sets;
 import com.sankuai.canyin.r.wushan.server.datanode.store.LoadDBDataService;
+import com.sankuai.canyin.r.wushan.thread.WushanThreadFactory;
 
 /**
  * 
@@ -19,6 +26,8 @@ import com.sankuai.canyin.r.wushan.server.datanode.store.LoadDBDataService;
  */
 public class Worker {
 	
+	private static final Logger LOG = LoggerFactory.getLogger(Worker.class);
+	
 	private Task targetTask;//等待运行的task
 	
 	private int port;
@@ -27,11 +36,14 @@ public class Worker {
 	
 	private LoadDBDataService loadDBDataService;
 	
-	private Queue<String> queue = new ConcurrentLinkedQueue<String>();
+	private volatile Queue<String> queue = new ConcurrentLinkedQueue<String>();
 	
 	private String storePath;
 	
 	private WorkerSyncStatusService workerSyncStatusService;
+	
+	private ExecutorService runner = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()
+			,new WushanThreadFactory("Task-runner"));
 	
 	public Worker(Task task , int port , String storePath) {
 		this.targetTask = task;
@@ -49,6 +61,23 @@ public class Worker {
 	public void run(){
 		loadDBDataService.load();
 		workerSyncStatusService.start();
+		process();
+	}
+	
+	public void process(){
+		while(!loadDBDataService.isOver() || !queue.isEmpty()){
+			List<Task> tasks = new ArrayList<Task>();
+			for(int i = 0 ; i < 100 && !queue.isEmpty() ;i++ ){
+				String params = queue.poll();
+				Map<String,Object> context = JSON.parseObject(params, HashMap.class);
+				context.putAll(targetTask.getParams());
+				Task task = new Task(targetTask.getId() , targetTask.getExpression(), targetTask.getDbs(),context);
+				tasks.add(task);
+			}
+			runner.execute(new TaskRunner(tasks));
+			LOG.info("Queue 剩余数量 : "+queue.size());
+		}
+		LOG.info("Task runner over! {}",targetTask);
 	}
 	
 	public static void main(String[] args) {
