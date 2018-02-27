@@ -39,16 +39,18 @@ public class DataNodeRpcService {
 	private String host;
 	private int port;
 	private DataNodeServiceImpl protocolImpl;
+	private WorkerManager workerManager;
 	
 	static{
 		work = new NioEventLoopGroup();
 		boot = new Bootstrap();
 	}
 	
-	public DataNodeRpcService(String host , int port  , DataNodeServiceImpl protocolImpl) {
+	public DataNodeRpcService(String host , int port  , DataNodeServiceImpl protocolImpl , WorkerManager workerManager) {
 		this.host = host;
 		this.port = port;
 		this.protocolImpl = protocolImpl;
+		this.workerManager = workerManager;
 	}
 	
 	public void start(){
@@ -78,7 +80,7 @@ public class DataNodeRpcService {
 					})
 					.addLast(new NameNodeDecode())
 					.addLast(new NameNodeEncode())
-					.addLast(new DataNodeRpcHandler(protocolImpl));
+					.addLast(new DataNodeRpcHandler(protocolImpl , workerManager));
 				}
 			});
 		try {

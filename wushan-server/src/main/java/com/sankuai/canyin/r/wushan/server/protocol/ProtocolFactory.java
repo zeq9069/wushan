@@ -8,13 +8,15 @@ package com.sankuai.canyin.r.wushan.server.protocol;
  */
 public final class ProtocolFactory {
 	
-	private static WushanProtocol[]  protocols = new WushanProtocol[4]; 
+	private static WushanProtocol[]  protocols = new WushanProtocol[5]; 
 	
 	static{
 		registerProtocol(HeartbeatPacketProtocol.TYPE,new HeartbeatPacketProtocol());
 		registerProtocol(TransferDataProtocol.TYPE,new TransferDataProtocol());
 		registerProtocol(DBInfoProtocol.TYPE,new DBInfoProtocol());
 		registerProtocol(TaskProtocol.TYPE,new TaskProtocol());
+		registerProtocol(WorkerStatueProtocol.TYPE,new WorkerStatueProtocol());
+
 	}
 	
 	private static void registerProtocol(int type , WushanProtocol proto){

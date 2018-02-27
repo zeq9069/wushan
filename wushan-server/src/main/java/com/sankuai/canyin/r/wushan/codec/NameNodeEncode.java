@@ -11,7 +11,9 @@ import com.sankuai.canyin.r.wushan.server.protocol.HeartbeatPacketProtocol;
 import com.sankuai.canyin.r.wushan.server.protocol.ProtocolFactory;
 import com.sankuai.canyin.r.wushan.server.protocol.TaskProtocol;
 import com.sankuai.canyin.r.wushan.server.protocol.TransferDataProtocol;
+import com.sankuai.canyin.r.wushan.server.protocol.WorkerStatueProtocol;
 import com.sankuai.canyin.r.wushan.server.worker.Task;
+import com.sankuai.canyin.r.wushan.server.worker.WorkerStatus;
 import com.sankuai.canyin.r.wushan.service.DBInfo;
 
 import io.netty.buffer.ByteBuf;
@@ -38,6 +40,8 @@ public class NameNodeEncode extends MessageToByteEncoder<Object>{
 			buf = ProtocolFactory.getProtocol(DBInfoProtocol.TYPE).encode(msg);
 		}else if(msg instanceof Task){
 			buf = ProtocolFactory.getProtocol(TaskProtocol.TYPE).encode(msg);
+		}else if(msg instanceof WorkerStatus){
+			buf = ProtocolFactory.getProtocol(WorkerStatueProtocol.TYPE).encode(msg);
 		}else{
 			throw new UnknownDataPacketException("NameNodeEncode encode failed. unknown message type , please check your send message type !");
 		}

@@ -3,6 +3,7 @@ package com.sankuai.canyin.r.wushan.server.handle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sankuai.canyin.r.wushan.server.datanode.service.WorkerManager;
 import com.sankuai.canyin.r.wushan.server.worker.Task;
 import com.sankuai.canyin.r.wushan.service.DataNodeServiceImpl;
 
@@ -18,9 +19,11 @@ public class DataNodeRpcHandler extends ChannelInboundHandlerAdapter{
 
 	private static final Logger LOG = LoggerFactory.getLogger(DataNodeRpcHandler.class);
 	private DataNodeServiceImpl protocolImpl;
+	private WorkerManager workerManager;
 	
-	public DataNodeRpcHandler(DataNodeServiceImpl protocolImpl) {
+	public DataNodeRpcHandler(DataNodeServiceImpl protocolImpl , WorkerManager workerManager) {
 		this.protocolImpl = protocolImpl;
+		this.workerManager = workerManager;
 	}
 	
 	@Override
@@ -39,14 +42,10 @@ public class DataNodeRpcHandler extends ChannelInboundHandlerAdapter{
 	public void channelRead(ChannelHandlerContext ctx, Object in) throws Exception {
 		if(in instanceof Task){
 			LOG.info("DataNode receive a Task. Task = {}",in);
-			//TODO datanode 处理 task
-			
-			
-			
-			
-			
+			workerManager.run((Task)in);
+		}else{
+			LOG.error("unknown message : {}",in);
 		}
-		
 	}
 
 	@Override

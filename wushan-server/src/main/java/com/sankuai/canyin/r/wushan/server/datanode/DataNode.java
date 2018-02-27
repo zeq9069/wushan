@@ -47,7 +47,7 @@ public class DataNode{
 	
 	private void init() throws IOException, NotFoundException{
 		config = new Configuration();
-		workerManager = new WorkerManager();
+		workerManager = new WorkerManager(config.getDataNodeWorkerRpcPort(),config.getDataNodeStorePath());
 
 		
 		sysInfo = new SystemInfo();
@@ -55,7 +55,7 @@ public class DataNode{
 		
 		DataNodeServiceImpl protocolImpl = new DataNodeServiceImpl(null);
 
-		rpcService = new DataNodeRpcService(config.getNameNodeServerHost(),config.getNameNodeRpcPort() , protocolImpl);
+		rpcService = new DataNodeRpcService(config.getNameNodeServerHost(),config.getNameNodeRpcPort() , protocolImpl , workerManager);
 		rpcService.init();
 		
 		client = new DataNodeClientSideService(protocolImpl);

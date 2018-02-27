@@ -21,6 +21,7 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 
 /**
  * worker进程中，负责跟dn保持连接，并传递数据(同步worker执行状态到dn，并执行dn回传的命令)
@@ -36,15 +37,18 @@ public class WorkerSyncStatusService {
 	private static final Bootstrap boot;
 	private String host;
 	private int port;
+	private Worker worker;
+	
 	
 	static{
 		work = new NioEventLoopGroup();
 		boot = new Bootstrap();
 	}
 	
-	public WorkerSyncStatusService(String host , int port) {
+	public WorkerSyncStatusService(String host , int port , Worker worker) {
 		this.host = host;
 		this.port = port;
+		this.worker = worker;
 	}
 	
 	public void start(){
@@ -72,8 +76,10 @@ public class WorkerSyncStatusService {
 							}, 1, TimeUnit.SECONDS);
 						}
 					})
+					.addLast(new IdleStateHandler(0,0,5,TimeUnit.SECONDS))
 					.addLast(new NameNodeDecode())
-					.addLast(new NameNodeEncode());
+					.addLast(new NameNodeEncode())
+					.addLast(new WorkerHeartBeatHandler(worker));
 				}
 			});
 		try {

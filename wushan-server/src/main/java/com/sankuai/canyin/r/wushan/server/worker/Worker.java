@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Sets;
+import com.sankuai.canyin.r.wushan.Service;
 import com.sankuai.canyin.r.wushan.server.datanode.store.LoadDBDataService;
 import com.sankuai.canyin.r.wushan.thread.WushanThreadFactory;
 
@@ -24,7 +25,7 @@ import com.sankuai.canyin.r.wushan.thread.WushanThreadFactory;
  * @author kyrin
  *
  */
-public class Worker {
+public class Worker implements Service{
 	
 	private static final Logger LOG = LoggerFactory.getLogger(Worker.class);
 	
@@ -33,6 +34,8 @@ public class Worker {
 	private int port;
 	
 	private long startTimestamp;
+	
+	private long endTimestamp;
 	
 	private LoadDBDataService loadDBDataService;
 	
@@ -45,6 +48,8 @@ public class Worker {
 	private ExecutorService runner = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()
 			,new WushanThreadFactory("Task-runner"));
 	
+	private volatile boolean isOver = false;
+	
 	public Worker(Task task , int port , String storePath) {
 		this.targetTask = task;
 		this.port = port;
@@ -55,16 +60,17 @@ public class Worker {
 	
 	public void init(){
 		loadDBDataService = new LoadDBDataService(storePath, targetTask.getDbs(), queue);
-		workerSyncStatusService = new WorkerSyncStatusService("loalhost", port);
+		workerSyncStatusService = new WorkerSyncStatusService("localhost", port , this);
 	}
 	
-	public void run(){
+	public void start(){
 		loadDBDataService.load();
 		workerSyncStatusService.start();
-		process();
+		process();//处理加载的数据
 	}
 	
-	public void process(){
+	public synchronized void process(){
+		isOver = false;
 		while(!loadDBDataService.isOver() || !queue.isEmpty()){
 			List<Task> tasks = new ArrayList<Task>();
 			for(int i = 0 ; i < 100 && !queue.isEmpty() ;i++ ){
@@ -77,7 +83,15 @@ public class Worker {
 			runner.execute(new TaskRunner(tasks));
 			LOG.info("Queue 剩余数量 : "+queue.size());
 		}
+		isOver = true;
+		endTimestamp = System.currentTimeMillis();
 		LOG.info("Task runner over! {}",targetTask);
+	}
+	
+	public WorkerStatus getStatus(){
+		WorkerStatus status = new WorkerStatus(targetTask.getId(), loadDBDataService.getDbs(),
+				loadDBDataService.getAlreadyLoadedDbs() , isOver, startTimestamp);
+		return status;
 	}
 	
 	public static void main(String[] args) {
@@ -95,6 +109,14 @@ public class Worker {
 		}
 		Task targetTask = new Task(id,expression, Sets.newHashSet(dbs.split(",")), params == null?null:JSON.parseObject(params, HashMap.class));
 		Worker worker = new Worker(targetTask , Integer.parseInt(port) , storePath);
-		worker.run();
+		worker.start();
+	}
+
+	public void destroy() {
+		loadDBDataService.shutdown();
+		if(!runner.isShutdown()){
+			runner.shutdownNow();
+		}
+		workerSyncStatusService.destroy();
 	}
 }

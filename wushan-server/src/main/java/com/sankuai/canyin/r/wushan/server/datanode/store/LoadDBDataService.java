@@ -194,4 +194,18 @@ public class LoadDBDataService {
 			return allSize;
 		}
 	}
+	
+	public Set<String> getAlreadyLoadedDbs(){
+		return alreadyLoadedDbs;
+	}
+	
+	public Set<String> getDbs(){
+		return dbs;
+	}
+	
+	public void shutdown(){
+		if(load != null && !load.isShutdown()){
+			load.shutdownNow();
+		}
+	}
 }
