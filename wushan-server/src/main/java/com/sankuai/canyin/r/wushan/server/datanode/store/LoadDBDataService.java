@@ -1,9 +1,12 @@
 package com.sankuai.canyin.r.wushan.server.datanode.store;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -159,10 +162,8 @@ public class LoadDBDataService {
 						String name = metaFile.getName().substring(0, metaFile.getName().lastIndexOf("."));
 						String parentPath = metaFile.getParent();
 						dataFile = new RandomAccessFile(new File(parentPath+"/"+name+".data"), "rws");
-						System.out.println("文件长度："+dataFile.length());
 						FileChannel dataChannel = dataFile.getChannel();
 						for(Location location : locations){
-							System.out.println(location.toString());
 							ByteBuffer buffer = ByteBuffer.allocate((int)location.getOffset());
 							dataChannel.read(buffer, (int)location.getStart());
 							queue.add(new String(buffer.array(),Charset.forName("UTF-8")));

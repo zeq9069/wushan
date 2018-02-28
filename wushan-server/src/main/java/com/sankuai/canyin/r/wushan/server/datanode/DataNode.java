@@ -49,13 +49,12 @@ public class DataNode{
 		config = new Configuration();
 		workerManager = new WorkerManager(config.getDataNodeWorkerRpcPort(),config.getDataNodeStorePath());
 
-		
 		sysInfo = new SystemInfo();
 		sysInfo.init();
 		
 		DataNodeServiceImpl protocolImpl = new DataNodeServiceImpl(null);
 
-		rpcService = new DataNodeRpcService(config.getNameNodeServerHost(),config.getNameNodeRpcPort() , protocolImpl , workerManager);
+		rpcService = new DataNodeRpcService(config.getNameNodeServerHost(),config.getNameNodeRpcPort() , protocolImpl , workerManager );
 		rpcService.init();
 		
 		client = new DataNodeClientSideService(protocolImpl);
@@ -67,9 +66,8 @@ public class DataNode{
 				,storeService.getStorageFactory() , sysInfo);
 		transferService.init();
 		
-		workerService = new WorkerService(config.getDataNodeWorkerRpcPort() , workerManager);
+		workerService = new WorkerService(config.getDataNodeWorkerRpcPort() , workerManager , client);
 		workerService.init();
-		
 	}
 	
 	public void start(){

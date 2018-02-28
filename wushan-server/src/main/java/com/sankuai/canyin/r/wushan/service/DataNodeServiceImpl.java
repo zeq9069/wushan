@@ -5,6 +5,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.sankuai.canyin.r.wushan.server.exception.ConnectionCloseExeception;
 import com.sankuai.canyin.r.wushan.server.worker.Task;
+import com.sankuai.canyin.r.wushan.server.worker.WorkerStatus;
 
 import io.netty.channel.Channel;
 
@@ -54,4 +55,15 @@ public class DataNodeServiceImpl implements DataNodeService{
 			lock.unlock();
 		}
 	}
+
+	public void updateTaskStatus(WorkerStatus status) throws ConnectionCloseExeception {
+		checkConn();
+		lock.lock();
+		try{
+			channel.writeAndFlush(status);
+		}finally{
+			lock.unlock();
+		}
+	}
+	
 }

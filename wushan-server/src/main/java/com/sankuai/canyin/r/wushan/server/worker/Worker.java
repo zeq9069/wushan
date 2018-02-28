@@ -86,6 +86,7 @@ public class Worker implements Service{
 		isOver = true;
 		endTimestamp = System.currentTimeMillis();
 		LOG.info("Task runner over! {}",targetTask);
+		destroy();
 	}
 	
 	public WorkerStatus getStatus(){
@@ -119,4 +120,5 @@ public class Worker implements Service{
 		}
 		workerSyncStatusService.destroy();
 	}
+	
 }

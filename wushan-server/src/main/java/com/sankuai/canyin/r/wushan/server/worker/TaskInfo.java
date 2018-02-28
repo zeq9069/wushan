@@ -10,7 +10,7 @@ public class TaskInfo implements Serializable{
 
 	private Task task;
 	
-	private DBHandleStatus status;
+	private DBHandleStatus status = DBHandleStatus.WAITING;
 	
 	private Map<String , Set<Db>> handleDb;//datanode ip与分发的数据库的映射
 	

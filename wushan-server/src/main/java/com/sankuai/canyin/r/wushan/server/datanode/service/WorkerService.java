@@ -10,6 +10,7 @@ import com.sankuai.canyin.r.wushan.Service;
 import com.sankuai.canyin.r.wushan.codec.NameNodeDecode;
 import com.sankuai.canyin.r.wushan.codec.NameNodeEncode;
 import com.sankuai.canyin.r.wushan.server.handle.WorkerHandler;
+import com.sankuai.canyin.r.wushan.service.DataNodeClientSideService;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -33,6 +34,7 @@ public class WorkerService implements Service {
 	private static EventLoopGroup workGroup;
 	private static ServerBootstrap server;
 	WorkerManager workerManager;
+	DataNodeClientSideService client;
 	
 	static {
 		bossGroup = new NioEventLoopGroup();
@@ -40,9 +42,10 @@ public class WorkerService implements Service {
 		server = new ServerBootstrap();
 	}
 
-	public WorkerService(int port , WorkerManager workerManager) {
+	public WorkerService(int port , WorkerManager workerManager , DataNodeClientSideService client) {
 		this.port = port;
 		this.workerManager = workerManager;
+		this.client = client;
 	}
 
 	public void start() {
@@ -54,7 +57,7 @@ public class WorkerService implements Service {
 						ch.pipeline()
 								.addLast(new NameNodeDecode())
 								.addLast(new NameNodeEncode())
-								.addLast(new WorkerHandler(workerManager));
+								.addLast(new WorkerHandler(workerManager , client));
 					}
 				});
 		try {

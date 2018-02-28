@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sankuai.canyin.r.wushan.server.namenode.ClientInfosManager;
+import com.sankuai.canyin.r.wushan.server.worker.TaskManager;
+import com.sankuai.canyin.r.wushan.server.worker.WorkerStatus;
 import com.sankuai.canyin.r.wushan.service.DBInfo;
 
 import io.netty.channel.ChannelHandler.Sharable;
@@ -22,6 +24,12 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 public class NameNodeRpcServerHandler extends ChannelInboundHandlerAdapter{
 	
 	private static final Logger LOG = LoggerFactory.getLogger(NameNodeRpcServerHandler.class);
+	
+	TaskManager taskManager;
+	
+	public NameNodeRpcServerHandler(TaskManager taskManager) {
+		this.taskManager = taskManager;
+	}
 	
 	//激活
 	@Override
@@ -42,9 +50,11 @@ public class NameNodeRpcServerHandler extends ChannelInboundHandlerAdapter{
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 		InetSocketAddress addr = (InetSocketAddress)ctx.channel().remoteAddress();
-		LOG.info("receive DBInfo from {}. {}",addr,msg);
 		if(msg instanceof DBInfo){
 			ClientInfosManager.addDBInfo(addr.getAddress().getHostAddress(),addr.getPort(),(DBInfo)msg);
+		}else if(msg instanceof WorkerStatus){
+			LOG.info("namenode receive a WorkerStatus : {}",msg);
+			taskManager.updateTaskStatus(addr.getAddress().getHostAddress(),addr.getPort(),(WorkerStatus)msg);
 		}
 	}
 

@@ -10,6 +10,7 @@ import com.sankuai.canyin.r.wushan.Service;
 import com.sankuai.canyin.r.wushan.codec.NameNodeDecode;
 import com.sankuai.canyin.r.wushan.codec.NameNodeEncode;
 import com.sankuai.canyin.r.wushan.server.handle.NameNodeRpcServerHandler;
+import com.sankuai.canyin.r.wushan.server.worker.TaskManager;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -26,6 +27,7 @@ public class NameNodeRpcService implements Service{
 	private static EventLoopGroup bossGroup ;
 	private static EventLoopGroup workGroup ;
 	private static ServerBootstrap server ;
+	private TaskManager taskManager;
 	
 	static{
 		bossGroup =  new NioEventLoopGroup();
@@ -33,8 +35,9 @@ public class NameNodeRpcService implements Service{
 		server = new ServerBootstrap();
 	}
 	
-	public NameNodeRpcService(int port){
+	public NameNodeRpcService(int port , TaskManager taskManager){
 		this.port = port;
+		this.taskManager = taskManager;
 	}
 	 
 	public void start(){
@@ -48,7 +51,7 @@ public class NameNodeRpcService implements Service{
 					ch.pipeline()
 								.addLast(new NameNodeDecode())
 								.addLast(new NameNodeEncode())
-								.addLast(new NameNodeRpcServerHandler());
+								.addLast(new NameNodeRpcServerHandler(taskManager));
 				}
 			});
 		try {

@@ -1,7 +1,9 @@
 package com.sankuai.canyin.r.wushan.server.datanode.service;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -13,6 +15,7 @@ import com.alibaba.fastjson.JSON;
 import com.sankuai.canyin.r.wushan.server.exception.TaskExsitException;
 import com.sankuai.canyin.r.wushan.server.worker.Task;
 import com.sankuai.canyin.r.wushan.server.worker.Worker;
+import com.sankuai.canyin.r.wushan.server.worker.WorkerStatus;
 
 import io.netty.channel.Channel;
 
@@ -34,6 +37,8 @@ public class WorkerManager {
 	
 	private Map<String,String> taskId2IP = new ConcurrentHashMap<String, String>();//
 	
+	private Map<String,WorkerStatus> taskId2WorkerStatus = new ConcurrentHashMap<String, WorkerStatus>();
+	
 	private int port;//worker进程与dn通信的端口
 	
 	private String storePath;//dn的存储目录
@@ -49,12 +54,40 @@ public class WorkerManager {
 		}
 		workers.put(task.getId(), task);
 		String user_dir = System.getProperty("user.dir");
-		ProcessBuilder proc = new ProcessBuilder("nohup","java","-cp",".:"+user_dir+"/lib/*",Worker.class.getName(), port+"" , storePath , task.getId() ,task.getExpression() , StringUtils.join(task.getDbs(),",") , JSON.toJSONString(task.getParams()));
+		ProcessBuilder proc = new ProcessBuilder(buildCommand(user_dir , task));
 		try {
 			proc.start();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	private List<String> buildCommand(String user_dir , Task task){
+		String gc_args = "-Xms1G -Xmx1G -XX:PermSize=128m -XX:MaxPermSize=256m"
+				+ " -XX:MetaspaceSize=512M -XX:MaxMetaspaceSize=512M -XX:+UseG1GC -XX:SurvivorRatio=8 -XX:NewRatio=3 -XX:MaxGCPauseMillis=9"
+				+ " -XX:+ExplicitGCInvokesConcurrent -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintHeapAtGC"
+				+ " -XX:+PrintTenuringDistribution -XX:+PrintGCCause -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintCommandLineFlags";
+		String[] array = gc_args.split(" ");
+		List<String> command = new ArrayList<String>();
+		command.add("nohup");
+		command.add("java");
+		for(String s : gc_args.split(" ")){
+			command.add(s);
+		}
+		command.add("-cp");
+		command.add(".:"+user_dir+"/lib/*:"+user_dir+"/conf/*");
+		command.add(Worker.class.getName());
+		command.add(""+port);
+		command.add(storePath);
+		command.add(task.getId());
+		command.add(task.getExpression());
+		command.add(StringUtils.join(task.getDbs(),","));
+		command.add(JSON.toJSONString(task.getParams()));
+		return command;
+	}
+	
+	public void updateStatus(WorkerStatus status){
+		taskId2WorkerStatus.put(status.getTaskId(), status);
 	}
 	
 	public void registChannel(String ip , int port , Channel channel){
@@ -78,9 +111,28 @@ public class WorkerManager {
 		}
 	}
 	
-	
 	public static void main(String[] args) {
-		ProcessBuilder proc = new ProcessBuilder("nohup","java","-cp",".:/Users/kyrin/workspace/learningworkspace/wushan/wushan-server/target/app/lib/*",Worker.class.getName(),"8416", "/tmp/wushan-data", "123456789", "wwww==3 && eeee == 6" , "1-0-null-7","{\"wwww\":3,\"eeee\":6}");
+		String gc_args = "-Xms1G -Xmx1G -XX:PermSize=128m -XX:MaxPermSize=256m"
+				+ " -XX:MetaspaceSize=512M -XX:MaxMetaspaceSize=512M -XX:+UseG1GC -XX:SurvivorRatio=8 -XX:NewRatio=3 -XX:MaxGCPauseMillis=9"
+				+ " -XX:+ExplicitGCInvokesConcurrent -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintHeapAtGC"
+				+ " -XX:+PrintTenuringDistribution -XX:+PrintGCCause -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintCommandLineFlags";
+		List<String> command = new ArrayList<String>();
+		command.add("nohup");
+		command.add("java");
+		for(String s : gc_args.split(" ")){
+			command.add(s);
+		}
+		command.add("-cp");
+		command.add(".:/Users/kyrin/workspace/learningworkspace/wushan/wushan-server/target/app/lib/*");
+		command.add(Worker.class.getName());
+		command.add("8416");
+		command.add("/tmp/wushan-data");
+		command.add("123456789");
+		command.add("wwww==3 && eeee == 6");
+		command.add("1-0-null-7");
+		command.add("{\"wwww\":3,\"eeee\":6}");
+
+		ProcessBuilder proc = new ProcessBuilder(command);
 		try {
 			proc.start();
 		} catch (IOException e) {

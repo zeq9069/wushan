@@ -7,7 +7,7 @@ public class Db {
 
 	String db;
 
-	DBHandleStatus status; // 处理中，处理完毕，等待处理
+	DBHandleStatus status = DBHandleStatus.WAITING; // 处理中，处理完毕，等待处理
 
 	private long lastTimestamp;// 最后更新时间
 

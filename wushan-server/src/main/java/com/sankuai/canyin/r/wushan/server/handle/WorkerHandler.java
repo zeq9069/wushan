@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sankuai.canyin.r.wushan.server.datanode.service.WorkerManager;
+import com.sankuai.canyin.r.wushan.server.worker.WorkerStatus;
+import com.sankuai.canyin.r.wushan.service.DataNodeClientSideService;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -15,9 +17,11 @@ public class WorkerHandler extends ChannelInboundHandlerAdapter{
 	private static final Logger LOG = LoggerFactory.getLogger(WorkerHandler.class);
 	
 	WorkerManager workerManager;
+	DataNodeClientSideService client;
 	
-	public WorkerHandler(WorkerManager workerManager) {
+	public WorkerHandler(WorkerManager workerManager , DataNodeClientSideService client ) {
 		this.workerManager = workerManager;
+		this.client = client;
 	}
 	
 	@Override
@@ -33,7 +37,13 @@ public class WorkerHandler extends ChannelInboundHandlerAdapter{
 
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-		LOG.info("Worker Service receive a new message : {}",msg);
+		if(msg instanceof WorkerStatus){
+			LOG.info("Worker Service receive a WorkerStatus : {}",msg);
+			workerManager.updateStatus((WorkerStatus)msg);
+			client.updateTaskStatus((WorkerStatus)msg);
+		}else{
+			LOG.error("Datanode receive a unknown message type : {}",msg);
+		}
 	}
 
 }

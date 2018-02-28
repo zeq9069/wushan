@@ -42,7 +42,7 @@ public class NameNode {
 		clientService = new ClientService(config.getNameNodeClientRpcPort(),dispatcher , taskManager);// client -> namenode transfer data or Worker
 		clientService.init();
 		
-		rpcService = new NameNodeRpcService(config.getNameNodeRpcPort());// datanode -> namenode upload db info
+		rpcService = new NameNodeRpcService(config.getNameNodeRpcPort() , taskManager);// datanode -> namenode upload db info
 		rpcService.init();
 		
 	}

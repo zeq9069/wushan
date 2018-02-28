@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sankuai.canyin.r.wushan.server.exception.ConnectionCloseExeception;
 import com.sankuai.canyin.r.wushan.server.worker.Task;
+import com.sankuai.canyin.r.wushan.server.worker.WorkerStatus;
 
 public class DataNodeClientSideService implements DataNodeService{
 
@@ -30,7 +31,15 @@ public class DataNodeClientSideService implements DataNodeService{
 		try {
 			impl.uploadTask(task);
 		} catch (ConnectionCloseExeception e) {
-			LOG.error("commit DB info to namenode failed.",e);
+			LOG.error("upload task to namenode failed.Task = "+task.toString(),e);
+		}
+	}
+
+	public void updateTaskStatus(WorkerStatus status) throws ConnectionCloseExeception {
+		try {
+			impl.updateTaskStatus(status);
+		} catch (ConnectionCloseExeception e) {
+			LOG.error("update worker status to namenode failed.",e);
 		}
 	}
 }

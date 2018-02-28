@@ -46,10 +46,10 @@ public class ClientServerHandler extends ChannelInboundHandlerAdapter{
 		if(msg instanceof DataPacket){
 			dispatcher.dispatch(msg);
 		}else if(msg instanceof Task){
-			LOG.info("namenode receive a Task. TASK = {}",msg);
+			LOG.info("namenode receive a Task. Task = {}",msg);
 			taskManager.upload((Task)msg);
 		}else{
-			throw new Exception("错误的数据包");
+			LOG.error("unknown message type.{}",msg);
 		}
 	}
 
@@ -57,7 +57,6 @@ public class ClientServerHandler extends ChannelInboundHandlerAdapter{
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
 		super.exceptionCaught(ctx, cause);
 		cause.printStackTrace();
-		InetSocketAddress addr = (InetSocketAddress)ctx.channel().remoteAddress();
 		ctx.close();
 	}
 }

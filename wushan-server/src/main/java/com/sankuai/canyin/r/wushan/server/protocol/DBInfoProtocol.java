@@ -22,7 +22,7 @@ public class DBInfoProtocol implements WushanProtocol{
 		
 		int dbLen = dbInfo.getDb() == null ? 0 : dbInfo.getDb().length ;
 		 
-		int bodyLen = 4 + dbLen + 8 * 4;
+		int bodyLen = 4 + 4 + dbLen + 8 * 4;
 		
 		int allLen = PacketHeader.HEADER_PROTO + bodyLen;
 		
@@ -41,7 +41,7 @@ public class DBInfoProtocol implements WushanProtocol{
 	}
 
 	public Object decode(ByteBuf buf) {
-		if(buf.readableBytes() < PacketHeader.HEADER_PROTO + 36){
+		if(buf.readableBytes() < PacketHeader.HEADER_PROTO + 40){
 			return null;
 		}
 		

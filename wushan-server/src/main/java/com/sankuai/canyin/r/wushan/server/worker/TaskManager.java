@@ -11,8 +11,10 @@ import org.slf4j.LoggerFactory;
 
 import com.sankuai.canyin.r.wushan.server.exception.TaskNotNullException;
 import com.sankuai.canyin.r.wushan.server.namenode.ClientInfosManager;
+import com.sankuai.canyin.r.wushan.server.worker.TaskInfo.DBHandleStatus;
 
 import io.netty.channel.Channel;
+import javassist.NotFoundException;
 
 /**
  * 负责管理client发送过来的Task（分发、持久化、状态同步等）
@@ -27,7 +29,7 @@ public class TaskManager {
 	private Map<String, TaskInfo> tasks = new ConcurrentHashMap<String, TaskInfo>();// Taskid 与 taskInfo的映射
 
 	private TaskSchedule taskSchedule = new TaskSchedule();
-
+	
 	private ReentrantLock lock = new ReentrantLock();
 
 	public TaskManager() {
@@ -51,15 +53,26 @@ public class TaskManager {
 				for (Db db : assignDb.get(key)) {
 					dbnames.add(db.getDb());
 				}
-				channel.writeAndFlush(new Task(task.getExpression(), dbnames, task.getParams()));
+				channel.writeAndFlush(new Task(taskId , task.getExpression(), dbnames, task.getParams()));
 			}
 		} finally {
 			lock.unlock();
 		}
 	}
 	
-	public void updateTaskStatus(){
-		
+	public void updateTaskStatus(String ip , int port , WorkerStatus status) throws NotFoundException{
+		TaskInfo taskInfo = tasks.get(status.getTaskId());
+		if(taskInfo == null){
+			throw new NotFoundException("Namenode not found Task.taskId = "+status.getTaskId());
+		}
+		taskInfo.setStatus(status.isOver ? DBHandleStatus.FINISHED : DBHandleStatus.PROCESSING);
+		Map<String, Set<Db>> handleDB = taskInfo.getHandleDb();
+		Set<Db> sets = handleDB.get(ip+":"+port);
+		for(Db db : sets){
+			if(status.getOverDB().contains(db.getDb())){
+				db.setLastTimestamp(System.currentTimeMillis());
+				db.setStatus(DBHandleStatus.FINISHED);
+			}
+		}
 	}
-
 }
