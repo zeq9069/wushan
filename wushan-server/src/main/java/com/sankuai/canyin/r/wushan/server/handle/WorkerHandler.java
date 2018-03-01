@@ -38,9 +38,10 @@ public class WorkerHandler extends ChannelInboundHandlerAdapter{
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 		if(msg instanceof WorkerStatus){
-			LOG.info("Worker Service receive a WorkerStatus : {}",msg);
-			workerManager.updateStatus((WorkerStatus)msg);
-			client.updateTaskStatus((WorkerStatus)msg);
+			WorkerStatus status  = (WorkerStatus)msg;
+			LOG.info("Worker Service receive a WorkerStatus : {}",status);
+			workerManager.updateStatus(status);
+			client.updateTaskStatus(status);
 		}else{
 			LOG.error("Datanode receive a unknown message type : {}",msg);
 		}

@@ -3,6 +3,7 @@ package com.sankuai.canyin.r.wushan.server.handle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sankuai.canyin.r.wushan.server.datanode.service.DataNodeRpcService;
 import com.sankuai.canyin.r.wushan.server.datanode.service.WorkerManager;
 import com.sankuai.canyin.r.wushan.server.worker.Task;
 import com.sankuai.canyin.r.wushan.service.DataNodeServiceImpl;
@@ -20,10 +21,12 @@ public class DataNodeRpcHandler extends ChannelInboundHandlerAdapter{
 	private static final Logger LOG = LoggerFactory.getLogger(DataNodeRpcHandler.class);
 	private DataNodeServiceImpl protocolImpl;
 	private WorkerManager workerManager;
+	Rennection rennection;
 	
-	public DataNodeRpcHandler(DataNodeServiceImpl protocolImpl , WorkerManager workerManager) {
+	public DataNodeRpcHandler(DataNodeServiceImpl protocolImpl , WorkerManager workerManager , Rennection rennection) {
 		this.protocolImpl = protocolImpl;
 		this.workerManager = workerManager;
+		this.rennection = rennection;
 	}
 	
 	@Override
@@ -51,5 +54,6 @@ public class DataNodeRpcHandler extends ChannelInboundHandlerAdapter{
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
 		LOG.warn("DataNodeRpcService unconnected Namenode");
+		rennection.rennection();
 	}
 }

@@ -44,6 +44,7 @@ public class NameNodeRpcServerHandler extends ChannelInboundHandlerAdapter{
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
 		InetSocketAddress addr = (InetSocketAddress)ctx.channel().remoteAddress();
 		ClientInfosManager.unregistClient(addr.getAddress().getHostAddress(),addr.getPort());
+		ClientInfosManager.removeDatanode(addr.getAddress().getHostAddress(),addr.getPort());
 		LOG.info("{}  disconnect namenode",addr.getAddress().getHostAddress());
 	}
 
@@ -62,7 +63,6 @@ public class NameNodeRpcServerHandler extends ChannelInboundHandlerAdapter{
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
 		LOG.error("NameNodeRpcServerHandler errors.",cause);
 		InetSocketAddress addr = (InetSocketAddress)ctx.channel().remoteAddress();
-		ClientInfosManager.unregistClient(addr.getAddress().getHostAddress(),addr.getPort());
 		ctx.close();
 	}
 

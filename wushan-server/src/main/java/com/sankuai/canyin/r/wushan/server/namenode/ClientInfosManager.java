@@ -7,6 +7,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sankuai.canyin.r.wushan.server.message.HeartbeatPakcet;
 import com.sankuai.canyin.r.wushan.service.DBInfo;
 
@@ -20,9 +23,11 @@ import io.netty.channel.Channel;
  */
 public final class ClientInfosManager {
 	
+	private static final Logger LOG = LoggerFactory.getLogger(ClientInfosManager.class);
+	
 	private static final Map<String, Channel> rpcClients = new ConcurrentHashMap<String, Channel>();//上报信息的client
 
-	private static final Map<String,Set<DBInfo>> dbInfos = new HashMap<String, Set<DBInfo>>();
+	private static final Map<String,Set<DBInfo>> dbInfos = new ConcurrentHashMap<String, Set<DBInfo>>();
 	
 	private static final Map<String, Channel> transferDataClients = new ConcurrentHashMap<String, Channel>();//保存数据的datanode
 
@@ -36,6 +41,7 @@ public final class ClientInfosManager {
 	}
 
 	public static void unregistClient(String host, int port) {
+		LOG.info("{}:{} 与namenode 断开！",host,port);
 		rpcClients.remove(host + ":" + port);
 	} 
 	
@@ -71,6 +77,10 @@ public final class ClientInfosManager {
 	
 	public static Map<String, Set<DBInfo>> getDbinfos() {
 		return dbInfos;
+	}
+	
+	public static void removeDatanode(String ip , int port){
+		dbInfos.remove(ip+":"+port);
 	}
 
 	private static void rebuildArray(){

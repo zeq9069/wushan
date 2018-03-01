@@ -12,6 +12,7 @@ import com.sankuai.canyin.r.wushan.codec.NameNodeEncode;
 import com.sankuai.canyin.r.wushan.server.datanode.SystemInfo;
 import com.sankuai.canyin.r.wushan.server.datanode.store.StorageFactory;
 import com.sankuai.canyin.r.wushan.server.handle.DataNodeHandler;
+import com.sankuai.canyin.r.wushan.server.handle.Rennection;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -83,7 +84,16 @@ public class DataNodeTransferDataRpcService implements Service{
 					})
 					.addLast(new NameNodeDecode())
 					.addLast(new NameNodeEncode())
-					.addLast(new DataNodeHandler(factory , sysInfo));
+					.addLast(new DataNodeHandler(factory , sysInfo , new Rennection() {
+						@Override
+						public void rennection() {
+							try {
+								reconnect();
+							} catch (InterruptedException e) {
+								LOG.error("reconnect() fail.",e);
+							}
+						}
+					}));
 				}
 			});
 		try {
@@ -131,7 +141,5 @@ public class DataNodeTransferDataRpcService implements Service{
 				}, 1, TimeUnit.SECONDS);
 			}
 		}
-		
 	}
-
 }

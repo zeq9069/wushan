@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSON;
 import com.sankuai.canyin.r.wushan.server.exception.TaskExsitException;
+import com.sankuai.canyin.r.wushan.server.utils.StreamUtils;
 import com.sankuai.canyin.r.wushan.server.worker.Task;
 import com.sankuai.canyin.r.wushan.server.worker.Worker;
 import com.sankuai.canyin.r.wushan.server.worker.WorkerStatus;
@@ -56,23 +57,26 @@ public class WorkerManager {
 		String user_dir = System.getProperty("user.dir");
 		ProcessBuilder proc = new ProcessBuilder(buildCommand(user_dir , task));
 		try {
-			proc.start();
+			Process pro = proc.start();
+			LOG.info("Worker input : "+StreamUtils.getOut(pro.getInputStream()));
+			LOG.error("Worker ERROR : "+StreamUtils.getOut(pro.getErrorStream()));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 	
 	private List<String> buildCommand(String user_dir , Task task){
-		String gc_args = "-Xms1G -Xmx1G -XX:PermSize=128m -XX:MaxPermSize=256m"
+		String gc_args = "-Xms1G -Xmx1G "
 				+ " -XX:MetaspaceSize=512M -XX:MaxMetaspaceSize=512M -XX:+UseG1GC -XX:SurvivorRatio=8 -XX:NewRatio=3 -XX:MaxGCPauseMillis=9"
 				+ " -XX:+ExplicitGCInvokesConcurrent -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintHeapAtGC"
 				+ " -XX:+PrintTenuringDistribution -XX:+PrintGCCause -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintCommandLineFlags";
-		String[] array = gc_args.split(" ");
 		List<String> command = new ArrayList<String>();
 		command.add("nohup");
 		command.add("java");
 		for(String s : gc_args.split(" ")){
-			command.add(s);
+			if(!"".equals(s.trim())){
+				command.add(s);
+			}
 		}
 		command.add("-cp");
 		command.add(".:"+user_dir+"/lib/*:"+user_dir+"/conf/*");
@@ -112,18 +116,21 @@ public class WorkerManager {
 	}
 	
 	public static void main(String[] args) {
-		String gc_args = "-Xms1G -Xmx1G -XX:PermSize=128m -XX:MaxPermSize=256m"
+		String gc_args = "-Xms1G -Xmx1G "
 				+ " -XX:MetaspaceSize=512M -XX:MaxMetaspaceSize=512M -XX:+UseG1GC -XX:SurvivorRatio=8 -XX:NewRatio=3 -XX:MaxGCPauseMillis=9"
 				+ " -XX:+ExplicitGCInvokesConcurrent -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintHeapAtGC"
 				+ " -XX:+PrintTenuringDistribution -XX:+PrintGCCause -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintCommandLineFlags";
 		List<String> command = new ArrayList<String>();
 		command.add("nohup");
 		command.add("java");
+		command.add("-server");
 		for(String s : gc_args.split(" ")){
-			command.add(s);
+			if(!s.trim().equals("")){
+				command.add(s);
+			}
 		}
 		command.add("-cp");
-		command.add(".:/Users/kyrin/workspace/learningworkspace/wushan/wushan-server/target/app/lib/*");
+		command.add(".:/Users/kyrin/workspace/learningworkspace/wushan/wushan-server/target/app/lib/*:/Users/kyrin/workspace/learningworkspace/wushan/wushan-server/target/app/conf/*");
 		command.add(Worker.class.getName());
 		command.add("8416");
 		command.add("/tmp/wushan-data");
@@ -134,7 +141,9 @@ public class WorkerManager {
 
 		ProcessBuilder proc = new ProcessBuilder(command);
 		try {
-			proc.start();
+			Process pro = proc.start();
+			LOG.info("Worker input : "+StreamUtils.getOut(pro.getInputStream()));
+			LOG.error("Worker ERROR : "+StreamUtils.getOut(pro.getErrorStream()));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

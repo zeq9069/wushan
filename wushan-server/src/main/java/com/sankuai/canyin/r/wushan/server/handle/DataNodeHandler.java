@@ -21,10 +21,12 @@ public class DataNodeHandler extends ChannelInboundHandlerAdapter{
 	
 	private StorageFactory factory;
 	private SystemInfo sysInfo;
+	Rennection rennection;
 	
-	public DataNodeHandler(StorageFactory factory , SystemInfo sysInfo) {
+	public DataNodeHandler(StorageFactory factory , SystemInfo sysInfo , Rennection rennection) {
 		this.factory = factory;
 		this.sysInfo = sysInfo;
+		this.rennection = rennection;
 	}
 	
 	@Override
@@ -49,4 +51,9 @@ public class DataNodeHandler extends ChannelInboundHandlerAdapter{
 		}
 	}
 
+	@Override
+	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+		LOG.error("datanode to namenode connect close.");
+		rennection.rennection();
+	}
 }

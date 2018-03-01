@@ -1,5 +1,9 @@
 package com.sankuai.canyin.r.wushan.server.worker;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -50,6 +54,10 @@ public class Worker implements Service{
 	
 	private volatile boolean isOver = false;
 	
+	private File f = new File("/Users/kyrin/workspace/learningworkspace/wushan/wushan-server/target/app/worker-result.log");
+	
+	private PrintWriter p;
+	
 	public Worker(Task task , int port , String storePath) {
 		this.targetTask = task;
 		this.port = port;
@@ -61,6 +69,11 @@ public class Worker implements Service{
 	public void init(){
 		loadDBDataService = new LoadDBDataService(storePath, targetTask.getDbs(), queue);
 		workerSyncStatusService = new WorkerSyncStatusService("localhost", port , this);
+		
+		try {
+			p = new PrintWriter(new FileOutputStream(f));
+		} catch (FileNotFoundException e) {
+		}
 	}
 	
 	public void start(){
@@ -71,22 +84,25 @@ public class Worker implements Service{
 	
 	public synchronized void process(){
 		isOver = false;
+		long count = 0;
 		while(!loadDBDataService.isOver() || !queue.isEmpty()){
 			List<Task> tasks = new ArrayList<Task>();
 			for(int i = 0 ; i < 100 && !queue.isEmpty() ;i++ ){
 				String params = queue.poll();
 				Map<String,Object> context = JSON.parseObject(params, HashMap.class);
+				p.write(String.valueOf(context.get("binded_phone"))+"\n");
 				context.putAll(targetTask.getParams());
 				Task task = new Task(targetTask.getId() , targetTask.getExpression(), targetTask.getDbs(),context);
 				tasks.add(task);
+				p.write("处理数量：count = "+(count++)+"\n");
 			}
 			runner.execute(new TaskRunner(tasks));
 			LOG.info("Queue 剩余数量 : "+queue.size());
 		}
+		p.write("任务结束,剩余数量："+queue.size()+"\n");
 		isOver = true;
 		endTimestamp = System.currentTimeMillis();
 		LOG.info("Task runner over! {}",targetTask);
-		destroy();
 	}
 	
 	public WorkerStatus getStatus(){

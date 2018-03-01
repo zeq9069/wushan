@@ -5,6 +5,8 @@ import java.util.HashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sankuai.canyin.r.wushan.server.handle.Rennection;
+
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.IdleState;
@@ -16,8 +18,11 @@ public class WorkerHeartBeatHandler extends ChannelInboundHandlerAdapter{
 	
 	private Worker worker;
 	
-	public WorkerHeartBeatHandler(Worker worker) {
+	private Rennection rennection;
+	
+	public WorkerHeartBeatHandler(Worker worker , Rennection rennection) {
 		this.worker = worker;
+		this.rennection = rennection;
 	}
 	
 	public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
@@ -31,4 +36,11 @@ public class WorkerHeartBeatHandler extends ChannelInboundHandlerAdapter{
 			super.userEventTriggered(ctx, evt);
 		}
 	}
+	
+	@Override
+	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+		LOG.error("Worker to datanode connection close.");
+		rennection.rennection();
+	}
+	
 }

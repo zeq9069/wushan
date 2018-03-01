@@ -42,17 +42,22 @@ public class TaskManager {
 		String taskId = TaskIdUtils.generateTaskId();
 		task.setId(taskId);
 		TaskInfo taskInfo = new TaskInfo(task);
-		tasks.put(taskId, taskInfo);
 		lock.lock();
 		try {
 			Map<String, Set<Db>> assignDb = taskSchedule.assign(task);
 			taskInfo.setHandleDb(assignDb);
+			tasks.put(taskId, taskInfo);
 			for (String key : assignDb.keySet()) {
 				Channel channel = ClientInfosManager.getRpcClientConn(key);
+				if(channel == null){
+					LOG.error("{} 已经断开! ",key);
+					continue;
+				}
 				Set<String> dbnames = new HashSet<String>();
 				for (Db db : assignDb.get(key)) {
 					dbnames.add(db.getDb());
 				}
+				LOG.info("TaskManager 分发Task 到channel : {}",channel);
 				channel.writeAndFlush(new Task(taskId , task.getExpression(), dbnames, task.getParams()));
 			}
 		} finally {

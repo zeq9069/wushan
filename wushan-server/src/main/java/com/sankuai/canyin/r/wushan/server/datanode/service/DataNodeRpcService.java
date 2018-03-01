@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import com.sankuai.canyin.r.wushan.codec.NameNodeDecode;
 import com.sankuai.canyin.r.wushan.codec.NameNodeEncode;
 import com.sankuai.canyin.r.wushan.server.handle.DataNodeRpcHandler;
+import com.sankuai.canyin.r.wushan.server.handle.Rennection;
 import com.sankuai.canyin.r.wushan.service.DataNodeServiceImpl;
 
 import io.netty.bootstrap.Bootstrap;
@@ -80,7 +81,17 @@ public class DataNodeRpcService {
 					})
 					.addLast(new NameNodeDecode())
 					.addLast(new NameNodeEncode())
-					.addLast(new DataNodeRpcHandler(protocolImpl , workerManager));
+					.addLast(new DataNodeRpcHandler(protocolImpl , workerManager , new Rennection() {
+						
+						@Override
+						public void rennection() {
+							try {
+								reconnect();
+							} catch (InterruptedException e) {
+								LOG.error("reconnect() fail.",e);
+							}
+						}
+					}));
 				}
 			});
 		try {
@@ -128,7 +139,7 @@ public class DataNodeRpcService {
 				}, 1, TimeUnit.SECONDS);
 			}
 		}
-		
 	}
+	
 
 }

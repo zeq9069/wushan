@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sankuai.canyin.r.wushan.codec.NameNodeDecode;
 import com.sankuai.canyin.r.wushan.codec.NameNodeEncode;
+import com.sankuai.canyin.r.wushan.server.handle.Rennection;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -79,7 +80,17 @@ public class WorkerSyncStatusService {
 					.addLast(new IdleStateHandler(0,0,5,TimeUnit.SECONDS))
 					.addLast(new NameNodeDecode())
 					.addLast(new NameNodeEncode())
-					.addLast(new WorkerHeartBeatHandler(worker));
+					.addLast(new WorkerHeartBeatHandler(worker , new Rennection() {
+						
+						@Override
+						public void rennection() {
+							try {
+								reconnect();
+							} catch (InterruptedException e) {
+								LOG.error("reconnect() fail.",e);
+							}
+						}
+					}));
 				}
 			});
 		try {
