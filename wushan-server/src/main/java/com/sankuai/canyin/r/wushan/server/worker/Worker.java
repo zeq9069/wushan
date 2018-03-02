@@ -79,7 +79,11 @@ public class Worker implements Service{
 	public void start(){
 		loadDBDataService.load();
 		workerSyncStatusService.start();
-		process();//处理加载的数据
+		new Thread(new Runnable() {
+			public void run() {
+				process();//处理加载的数据
+			}
+		}).start(); 
 	}
 	
 	public synchronized void process(){
@@ -113,7 +117,7 @@ public class Worker implements Service{
 	
 	public static void main(String[] args) {
 		if(args == null || args.length < 5){
-			System.exit(0);
+			System.exit(-1);
 		}
 		String port = args[0];
 		String storePath = args[1];

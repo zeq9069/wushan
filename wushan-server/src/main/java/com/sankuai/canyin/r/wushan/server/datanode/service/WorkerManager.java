@@ -49,20 +49,28 @@ public class WorkerManager {
 		this.storePath = storePath;
 	}
 	
-	public void run(Task task){
+	public void run(final Task task){
 		if(workers.containsKey(task.getId())){
 			throw new TaskExsitException("The task already exists. taskId = "+task.getId());
 		}
 		workers.put(task.getId(), task);
-		String user_dir = System.getProperty("user.dir");
-		ProcessBuilder proc = new ProcessBuilder(buildCommand(user_dir , task));
-		try {
-			Process pro = proc.start();
-			LOG.info("Worker input : "+StreamUtils.getOut(pro.getInputStream()));
-			LOG.error("Worker ERROR : "+StreamUtils.getOut(pro.getErrorStream()));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		final String user_dir = System.getProperty("user.dir");
+
+		//TODO woker 进程被杀死，线程结束，可以提取一层对worker的包裹
+		new Thread(new Runnable() {
+			
+			public void run() {
+				ProcessBuilder proc = new ProcessBuilder(buildCommand(user_dir , task));
+				try {
+					proc.redirectErrorStream(true);//ERROR AND input输出合并
+					Process pro = proc.start();
+					LOG.info("Worker output : "+StreamUtils.getOut(pro.getInputStream()));
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}).start();
+		
 	}
 	
 	private List<String> buildCommand(String user_dir , Task task){
@@ -80,6 +88,7 @@ public class WorkerManager {
 		}
 		command.add("-cp");
 		command.add(".:"+user_dir+"/lib/*:"+user_dir+"/conf/*");
+		//command.add(".:/Users/kyrin/workspace/learningworkspace/wushan/wushan-server/target/app/lib/*:/Users/kyrin/workspace/learningworkspace/wushan/wushan-server/target/app/conf/*");
 		command.add(Worker.class.getName());
 		command.add(""+port);
 		command.add(storePath);
@@ -87,6 +96,7 @@ public class WorkerManager {
 		command.add(task.getExpression());
 		command.add(StringUtils.join(task.getDbs(),","));
 		command.add(JSON.toJSONString(task.getParams()));
+		//command.add(" & ");
 		return command;
 	}
 	

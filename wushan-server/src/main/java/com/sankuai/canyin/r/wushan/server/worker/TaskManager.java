@@ -57,7 +57,6 @@ public class TaskManager {
 				for (Db db : assignDb.get(key)) {
 					dbnames.add(db.getDb());
 				}
-				LOG.info("TaskManager 分发Task 到channel : {}",channel);
 				channel.writeAndFlush(new Task(taskId , task.getExpression(), dbnames, task.getParams()));
 			}
 		} finally {
