@@ -23,7 +23,7 @@ public class TaskSchedule {
 					 Db db = new Db(dbString,DBHandleStatus.WAITING);
 					 if(dbSets == null){
 						 dbSets = new HashSet<Db>();
-						 assignDB.put(key, dbSets);
+						 assignDB.put(key.split(":")[0], dbSets);
 					 }
 					 dbSets.add(db);
 				 }

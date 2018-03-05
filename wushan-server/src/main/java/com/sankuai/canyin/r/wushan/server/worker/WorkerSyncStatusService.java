@@ -90,7 +90,8 @@ public class WorkerSyncStatusService {
 								LOG.error("reconnect() fail.",e);
 							}
 						}
-					}));
+					}))
+					.addLast(new WorkerCommandHandler(worker));
 				}
 			});
 		try {
@@ -105,12 +106,12 @@ public class WorkerSyncStatusService {
 	}
 
 	public void destroy(){
-		try {
-			if(work != null){
-				work.shutdownGracefully().sync();
+		if(work != null){
+			try {
+				work.shutdownGracefully(5, 5, TimeUnit.SECONDS).sync();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
-		} catch (InterruptedException e) {
-			LOG.error("WorkerSyncStatusService destroy failed.",e);
 		}
 	}
 

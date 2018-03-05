@@ -87,8 +87,8 @@ public class WorkerManager {
 			}
 		}
 		command.add("-cp");
-		//command.add(".:"+user_dir+"/lib/*:"+user_dir+"/conf/*");
-		command.add(".:/Users/kyrin/workspace/learningworkspace/wushan/wushan-server/target/app/lib/*:/Users/kyrin/workspace/learningworkspace/wushan/wushan-server/target/app/conf/*");
+		command.add(".:"+user_dir+"/lib/*:"+user_dir+"/conf/*");
+		//command.add(".:/Users/kyrin/workspace/learningworkspace/wushan/wushan-server/target/app/lib/*:/Users/kyrin/workspace/learningworkspace/wushan/wushan-server/target/app/conf/*");
 		command.add(Worker.class.getName());
 		command.add(""+port);
 		command.add(storePath);

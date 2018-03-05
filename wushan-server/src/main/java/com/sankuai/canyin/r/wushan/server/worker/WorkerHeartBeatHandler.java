@@ -1,7 +1,5 @@
 package com.sankuai.canyin.r.wushan.server.worker;
 
-import java.util.HashSet;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

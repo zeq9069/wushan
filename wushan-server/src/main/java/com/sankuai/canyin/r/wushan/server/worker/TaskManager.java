@@ -48,7 +48,7 @@ public class TaskManager {
 			taskInfo.setHandleDb(assignDb);
 			tasks.put(taskId, taskInfo);
 			for (String key : assignDb.keySet()) {
-				Channel channel = ClientInfosManager.getRpcClientConn(key);
+				Channel channel = ClientInfosManager.getRpcClientConnByIp(key);
 				if(channel == null){
 					LOG.error("{} 已经断开! ",key);
 					continue;
@@ -64,14 +64,14 @@ public class TaskManager {
 		}
 	}
 	
-	public void updateTaskStatus(String ip , int port , WorkerStatus status) throws NotFoundException{
+	public void updateTaskStatus(String ip , WorkerStatus status) throws NotFoundException{
 		TaskInfo taskInfo = tasks.get(status.getTaskId());
 		if(taskInfo == null){
 			throw new NotFoundException("Namenode not found Task.taskId = "+status.getTaskId());
 		}
 		taskInfo.setStatus(status.isOver ? DBHandleStatus.FINISHED : DBHandleStatus.PROCESSING);
 		Map<String, Set<Db>> handleDB = taskInfo.getHandleDb();
-		Set<Db> sets = handleDB.get(ip+":"+port);
+		Set<Db> sets = handleDB.get(ip);
 		for(Db db : sets){
 			if(status.getOverDB().contains(db.getDb())){
 				db.setLastTimestamp(System.currentTimeMillis());

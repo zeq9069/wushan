@@ -58,6 +58,8 @@ public class Worker implements Service{
 	
 	private PrintWriter p;
 	
+	private Thread start;
+	
 	public Worker(Task task , int port , String storePath) {
 		this.targetTask = task;
 		this.port = port;
@@ -79,11 +81,12 @@ public class Worker implements Service{
 	public void start(){
 		loadDBDataService.load();
 		workerSyncStatusService.start();
-		new Thread(new Runnable() {
+		start = new Thread(new Runnable() {
 			public void run() {
 				process();//处理加载的数据
 			}
-		}).start(); 
+		});
+		start.start();
 	}
 	
 	public synchronized void process(){
@@ -134,11 +137,18 @@ public class Worker implements Service{
 	}
 
 	public void destroy() {
-		loadDBDataService.shutdown();
-		if(!runner.isShutdown()){
-			runner.shutdownNow();
-		}
-		workerSyncStatusService.destroy();
+		System.exit(0);
+//		if(start != null && start.isAlive()){
+//			try {
+//				start.join(10);
+//			} catch (InterruptedException e) {
+//			}
+//		}
+//		loadDBDataService.shutdown();
+//		if(!runner.isShutdown()){
+//			runner.shutdownNow();
+//		}
+//		workerSyncStatusService.destroy();
 	}
 	
 }
