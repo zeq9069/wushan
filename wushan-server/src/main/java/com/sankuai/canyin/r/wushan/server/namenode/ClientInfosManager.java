@@ -1,8 +1,8 @@
 package com.sankuai.canyin.r.wushan.server.namenode;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -51,6 +51,17 @@ public final class ClientInfosManager {
 	
 	public static Channel getRpcClientConn(String key){
 		return rpcClients.get(key);
+	}
+	
+	public static Channel getRpcClientConnByIp(String ip){
+		Iterator<String> it = rpcClients.keySet().iterator();
+		while(it.hasNext()){
+			String key = it.next();
+			if(key.startsWith(ip) && rpcClients.get(key) != null && rpcClients.get(key).isActive()){
+				return rpcClients.get(key);
+			}
+		}
+		return null;
 	}
 	
 	public static void registTransferDataClient(String host, int port, Channel channel) {

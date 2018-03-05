@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sankuai.canyin.r.wushan.server.namenode.ClientInfosManager;
+import com.sankuai.canyin.r.wushan.server.worker.Command;
+import com.sankuai.canyin.r.wushan.server.worker.Command.CommandType;
 import com.sankuai.canyin.r.wushan.server.worker.TaskManager;
 import com.sankuai.canyin.r.wushan.server.worker.WorkerStatus;
 import com.sankuai.canyin.r.wushan.service.DBInfo;
@@ -54,8 +56,13 @@ public class NameNodeRpcServerHandler extends ChannelInboundHandlerAdapter{
 		if(msg instanceof DBInfo){
 			ClientInfosManager.addDBInfo(addr.getAddress().getHostAddress(),addr.getPort(),(DBInfo)msg);
 		}else if(msg instanceof WorkerStatus){
-			LOG.info("namenode receive a WorkerStatus : {}",msg);
-			taskManager.updateTaskStatus(addr.getAddress().getHostAddress(),addr.getPort(),(WorkerStatus)msg);
+			WorkerStatus status = (WorkerStatus) msg;
+			LOG.info("namenode receive a WorkerStatus : {}",status);
+			taskManager.updateTaskStatus(addr.getAddress().getHostAddress(),status);
+			if(status.isOver()){
+				LOG.info("task is over. starting to destroy.taskId = {} " , status.getTaskId());
+				ctx.writeAndFlush(new Command(CommandType.DESTROY, status.getTaskId()));
+			}
 		}
 	}
 

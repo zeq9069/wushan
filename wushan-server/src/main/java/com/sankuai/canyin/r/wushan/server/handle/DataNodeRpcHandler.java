@@ -5,9 +5,12 @@ import org.slf4j.LoggerFactory;
 
 import com.sankuai.canyin.r.wushan.server.datanode.service.DataNodeRpcService;
 import com.sankuai.canyin.r.wushan.server.datanode.service.WorkerManager;
+import com.sankuai.canyin.r.wushan.server.namenode.ClientInfosManager;
+import com.sankuai.canyin.r.wushan.server.worker.Command;
 import com.sankuai.canyin.r.wushan.server.worker.Task;
 import com.sankuai.canyin.r.wushan.service.DataNodeServiceImpl;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
@@ -46,6 +49,11 @@ public class DataNodeRpcHandler extends ChannelInboundHandlerAdapter{
 		if(in instanceof Task){
 			LOG.info("DataNode receive a Task. Task = {}",in);
 			workerManager.run((Task)in);
+		}else if(in instanceof Command){
+			LOG.info("datanode receive a command to worker.{}",in);
+			Command cmd = (Command)in;
+			Channel channel = workerManager.getWorkerChannelByTaskId(cmd.getTaskId());
+			channel.writeAndFlush(cmd);
 		}else{
 			LOG.error("unknown message : {}",in);
 		}

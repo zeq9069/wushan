@@ -37,10 +37,11 @@ public class WorkerHandler extends ChannelInboundHandlerAdapter{
 
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+		InetSocketAddress addr = (InetSocketAddress) ctx.channel().remoteAddress();
 		if(msg instanceof WorkerStatus){
 			WorkerStatus status  = (WorkerStatus)msg;
 			LOG.info("Worker Service receive a WorkerStatus : {}",status);
-			workerManager.updateStatus(status);
+			workerManager.updateStatus(addr.getAddress().getHostAddress(),addr.getPort(),status);
 			client.updateTaskStatus(status);
 		}else{
 			LOG.error("Datanode receive a unknown message type : {}",msg);

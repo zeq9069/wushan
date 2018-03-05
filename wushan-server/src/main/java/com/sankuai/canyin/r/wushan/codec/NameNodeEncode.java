@@ -6,12 +6,14 @@ import org.slf4j.LoggerFactory;
 import com.sankuai.canyin.r.wushan.server.exception.UnknownDataPacketException;
 import com.sankuai.canyin.r.wushan.server.message.DataPacket;
 import com.sankuai.canyin.r.wushan.server.message.HeartbeatPakcet;
+import com.sankuai.canyin.r.wushan.server.protocol.CommandProtocol;
 import com.sankuai.canyin.r.wushan.server.protocol.DBInfoProtocol;
 import com.sankuai.canyin.r.wushan.server.protocol.HeartbeatPacketProtocol;
 import com.sankuai.canyin.r.wushan.server.protocol.ProtocolFactory;
 import com.sankuai.canyin.r.wushan.server.protocol.TaskProtocol;
 import com.sankuai.canyin.r.wushan.server.protocol.TransferDataProtocol;
 import com.sankuai.canyin.r.wushan.server.protocol.WorkerStatueProtocol;
+import com.sankuai.canyin.r.wushan.server.worker.Command;
 import com.sankuai.canyin.r.wushan.server.worker.Task;
 import com.sankuai.canyin.r.wushan.server.worker.WorkerStatus;
 import com.sankuai.canyin.r.wushan.service.DBInfo;
@@ -42,6 +44,8 @@ public class NameNodeEncode extends MessageToByteEncoder<Object>{
 			buf = ProtocolFactory.getProtocol(TaskProtocol.TYPE).encode(msg);
 		}else if(msg instanceof WorkerStatus){
 			buf = ProtocolFactory.getProtocol(WorkerStatueProtocol.TYPE).encode(msg);
+		}else if(msg instanceof Command){
+			buf = ProtocolFactory.getProtocol(CommandProtocol.TYPE).encode(msg);
 		}else{
 			throw new UnknownDataPacketException("NameNodeEncode encode failed. unknown message type , please check your send message type !");
 		}

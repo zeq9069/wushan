@@ -87,8 +87,8 @@ public class WorkerManager {
 			}
 		}
 		command.add("-cp");
-		command.add(".:"+user_dir+"/lib/*:"+user_dir+"/conf/*");
-		//command.add(".:/Users/kyrin/workspace/learningworkspace/wushan/wushan-server/target/app/lib/*:/Users/kyrin/workspace/learningworkspace/wushan/wushan-server/target/app/conf/*");
+		//command.add(".:"+user_dir+"/lib/*:"+user_dir+"/conf/*");
+		command.add(".:/Users/kyrin/workspace/learningworkspace/wushan/wushan-server/target/app/lib/*:/Users/kyrin/workspace/learningworkspace/wushan/wushan-server/target/app/conf/*");
 		command.add(Worker.class.getName());
 		command.add(""+port);
 		command.add(storePath);
@@ -100,8 +100,9 @@ public class WorkerManager {
 		return command;
 	}
 	
-	public void updateStatus(WorkerStatus status){
+	public void updateStatus(String ip , int port ,WorkerStatus status){
 		taskId2WorkerStatus.put(status.getTaskId(), status);
+		taskId2IP.put(status.getTaskId()  , ip+":"+port);
 	}
 	
 	public void registChannel(String ip , int port , Channel channel){
@@ -123,6 +124,18 @@ public class WorkerManager {
 				}
 			}
 		}
+	}
+	
+	public Channel getWorkerChannelByTaskId(String taskId){
+		String IPAndPort = taskId2IP.get(taskId);
+		if(IPAndPort == null){
+			return null;
+		}
+		Channel channel = IP2conns.get(IPAndPort);
+		if(channel != null){
+			return channel;
+		}
+		return null;
 	}
 	
 	public static void main(String[] args) {
