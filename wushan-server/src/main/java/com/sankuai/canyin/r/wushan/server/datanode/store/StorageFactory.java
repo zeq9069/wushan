@@ -111,7 +111,7 @@ public class StorageFactory {
 				//uploaad dbinfo
 				protocolImpl.commitDBInfo(getDBInfos());
 			}
-		}, 5, 5, TimeUnit.SECONDS);
+		}, 10, 5, TimeUnit.SECONDS);
 		
 		reload();
 	}
