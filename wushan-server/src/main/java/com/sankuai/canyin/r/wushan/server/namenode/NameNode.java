@@ -52,7 +52,6 @@ public class NameNode {
 		transferService.start();
 		clientService.start();
 		rpcService.start();
-		
 	}
 	
 	public Dispatcher getDispatcher() {
