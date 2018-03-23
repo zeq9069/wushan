@@ -49,7 +49,7 @@ public class WorkerService implements Service {
 	}
 
 	public void start() {
-		LOG.info("starting WorkerService ...");
+		LOG.debug("starting WorkerService ...");
 		server.group(bossGroup, workGroup).channel(NioServerSocketChannel.class)
 				.localAddress(new InetSocketAddress(port)).childHandler(new ChannelInitializer<Channel>() {
 					@Override

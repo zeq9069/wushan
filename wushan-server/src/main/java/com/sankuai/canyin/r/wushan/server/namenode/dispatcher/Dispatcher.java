@@ -80,15 +80,15 @@ public class Dispatcher {
 							if (channel != null) {
 								for (Object obj : dataInfoMap.get(info)) {
 									channel.write(obj);
-									LOG.info("分发数量：" + count.incrementAndGet());
+									count.incrementAndGet();
 								}
 								channel.flush();
 							} else {
 								LOG.error("没有可见的datanode，数据丢弃");
 							}
 						}
+						LOG.info("分发数量：" + count.get());
 					} else {
-						LOG.info("分发线程等待中...");
 						try {
 							TimeUnit.MILLISECONDS.sleep(10);
 						} catch (InterruptedException e) {

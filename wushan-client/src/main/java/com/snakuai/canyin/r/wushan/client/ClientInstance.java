@@ -1,6 +1,10 @@
 package com.snakuai.canyin.r.wushan.client;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.snakuai.canyin.r.wushan.client.codec.WushanDecode;
 import com.snakuai.canyin.r.wushan.client.codec.WushanEncode;
@@ -9,6 +13,7 @@ import DataClientHandler.DataClientHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
@@ -17,9 +22,10 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 
 public class ClientInstance {
 	
+	private static final Logger LOG = LoggerFactory.getLogger(ClientInstance.class);
 	
 	private static EventLoopGroup work ;
-	private static final Bootstrap boot;
+	private Bootstrap boot;
 	private String host;
 	private int port;
 	
@@ -27,7 +33,6 @@ public class ClientInstance {
 	
 	static{
 		work = new NioEventLoopGroup();
-		boot = new Bootstrap();
 	}
 	
 	public ClientInstance(String host , int port) {
@@ -37,7 +42,7 @@ public class ClientInstance {
 	}
 	
 	public void start(){
-		final Bootstrap boot = new Bootstrap();
+		boot = new Bootstrap();
 		boot.group(work)
 			.channel(NioSocketChannel.class)
 		    .option(ChannelOption.SO_BACKLOG, 128)
@@ -50,11 +55,20 @@ public class ClientInstance {
 					ch.pipeline()
 					.addLast(new WushanDecode())
 					.addLast(new WushanEncode())
-					.addLast(new DataClientHandler(channel));
+					.addLast(new DataClientHandler(channel , new Rennection() {
+						@Override
+						public void rennection() {
+							try {
+								reconnect();
+							} catch (InterruptedException e) {
+								LOG.error("CLientInstance reconnected Namenode failed");
+							}
+						}
+					}));
 				}
 			});
 		try {
-			ChannelFuture future1 = boot.connect().await();
+			reconnect();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -63,6 +77,32 @@ public class ClientInstance {
 	public void init() {
 		
 	}
+	
+	//TODO 重试提取到 channelInactive
+		public void reconnect() throws InterruptedException{
+			ChannelFuture future = boot.connect();
+			future.addListener(new ChannelFutureListenerImpl());
+			future.await(1, TimeUnit.SECONDS);
+		}
+		
+		class ChannelFutureListenerImpl implements ChannelFutureListener{
+			public void operationComplete(ChannelFuture future) throws Exception {
+				if(future.isSuccess()){
+					LOG.info("ClientInstance connected Namenode success!");
+				}else {
+					future.channel().eventLoop().schedule(new Runnable() {
+						public void run() {
+							LOG.info("ClientInstance connected Namenode fialed. reconnecting Namenode...");
+							try {
+								reconnect();
+							} catch (InterruptedException e) {
+								LOG.info("ClientInstance reconnected Namenode fialed",e);
+							}
+						}
+					}, 1, TimeUnit.SECONDS);
+				}
+			}
+		}
 
 	public void destroy(){
 		try {

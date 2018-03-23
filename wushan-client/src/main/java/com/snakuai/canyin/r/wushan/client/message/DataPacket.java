@@ -11,20 +11,23 @@ import io.netty.util.CharsetUtil;
  */
 public class DataPacket implements Serializable{
 	
+	private static final long serialVersionUID = 8811136895127093013L;
+
 	byte[] db;
 	
 	byte[] key;
 	
 	byte[] data;
 	
-	public DataPacket(byte[] key , byte[] data) {
-		this(null, key, data);
-	}
 
 	public DataPacket(byte[] db , byte[] key , byte[] data) {
 		this.key = key;
 		this.data = data;
 		this.db = db;
+	}
+	
+	public DataPacket(byte[] key , byte[] data) {
+		this(null, key, data);
 	}
 
 	public byte[] getKey() {

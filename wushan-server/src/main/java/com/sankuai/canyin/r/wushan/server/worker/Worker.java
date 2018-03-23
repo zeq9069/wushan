@@ -54,7 +54,7 @@ public class Worker implements Service{
 	
 	private volatile boolean isOver = false;
 	
-	private File f = new File("/Users/kyrin/workspace/learningworkspace/wushan/wushan-server/target/app/worker-result.log");
+	private File f = new File("/tmp/worker-result.log");
 	
 	private PrintWriter p;
 	

@@ -1,5 +1,6 @@
 package com.snakuai.canyin.r.wushan.client;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -12,18 +13,18 @@ public class ClientManager {
 	
 	private ClientInstance instance;
 	
-	private static final ClientManager clientManager = new ClientManager();
+	private String host;
 	
-	private ClientManager(){
-		init();
+	private int port;
+	
+	public ClientManager(String host , int port){
+		this.host = host;
+		this.port = port;
+		 init();
 	}
 	
-	public static ClientManager getIstance(){
-		return ClientManager.clientManager;
-	}
-	
-	public void init(){
-		instance = new ClientInstance("localhost", 8412);
+	private void init(){
+		instance = new ClientInstance(host, port);
 		instance.start();
 		service = new ClientServiceImpl(instance.channel);
 	}
@@ -37,17 +38,19 @@ public class ClientManager {
 		public ClientServiceImpl(ClientChannel channel) {
 			this.channel = channel;
 		}
-		public void send(DataPacket packet) throws Exception {
+		public synchronized void send(DataPacket packet) throws Exception {
 			channel.getChannel().writeAndFlush(packet);
 		}
+		
+		public synchronized void sendBatch(List<DataPacket> packets) throws Exception {
+			for(DataPacket dp : packets){
+				channel.getChannel().write(dp);
+			}
+			channel.getChannel().flush();
+		}
+		
 		public void uploadExpression(String expression, Set<String> dbs, Map<String, Object> params) throws Exception {
 			channel.getChannel().writeAndFlush(new Task(expression, dbs, params));
 		}
 	}
-	
-	public static void main(String[] args) throws Exception {
-		ClientManager manager = ClientManager.getIstance();
-		manager.getClientService().send(new DataPacket("123".getBytes(), "22222222222".getBytes()));
-	}
-	
 }

@@ -31,15 +31,15 @@ if [ "$PIDS" != "" ]; then
 	if [ $ACTION == "stop" ]; then
 		kill -9 $PIDS
 		exit -1
-	elif [ $ACTION == "restart" ]; then
+	elif [ "$ACTION" == "restart" ]; then
 		echo "Starting stop $MAIN_CLASS service..."
 		kill -9 $PIDS
-	elif [ $ACTION == "start" ]; then
+	elif [ "$ACTION" == "start" ]; then
 		echo "$SERVICE is runing! Please stop and then start"
 		exit -1
 	fi
 else
-	if [ $ACTION == "stop" ]; then
+	if [ "$ACTION" == "stop" ]; then
 		echo "$SERVICE is stopped"
 		exit -1
 	fi
@@ -50,8 +50,6 @@ G1_GC_OPTS="-Xms2G
                 -Xmx2G
                 -XX:PermSize=128m
 	            -XX:MaxPermSize=256m
-                -XX:MetaspaceSize=512M
-                -XX:MaxMetaspaceSize=512M
                 -XX:+UseG1GC
                 -XX:SurvivorRatio=8
                 -XX:NewRatio=3
