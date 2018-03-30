@@ -20,7 +20,7 @@ public class ProcessUtils {
 		try {
 			Process proc = builder.start();
 			errorReader = new BufferedReader(new InputStreamReader(proc.getErrorStream(), Charset.forName("UTF-8")));
-			System.out.println(errorReader.readLine());
+			LOG.warn("Commands run error -> "+errorReader.readLine());
 			reader = new BufferedReader(new InputStreamReader(proc.getInputStream(), Charset.forName("UTF-8")));
 			String line = null;
 			while((line = reader.readLine())!=null){

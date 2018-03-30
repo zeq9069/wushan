@@ -24,12 +24,13 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Charsets;
+import com.alibaba.fastjson.JSON;
 import com.sankuai.canyin.r.wushan.config.Configuration;
 import com.sankuai.canyin.r.wushan.server.message.DataPacket;
 import com.sankuai.canyin.r.wushan.service.DBInfo;
@@ -49,7 +50,7 @@ public class StorageFactory {
 
 	private static final Logger LOG = LoggerFactory.getLogger(StorageFactory.class);
 	
-	private Map<String , DataFile> cache = new ConcurrentHashMap<String, DataFile>();//索引偏移量缓存
+	private Map<String , AtomicLong> db2RecordNum = new ConcurrentHashMap<String, AtomicLong>();//数据库对应的记录数量
 
 	private volatile Map<String , Map<String, DataFile>> offset = new ConcurrentHashMap<String , Map<String, DataFile>>();
 
@@ -105,19 +106,22 @@ public class StorageFactory {
 	public void init(){
 		schedule.scheduleAtFixedRate(new Runnable() {
 			public void run() {
-				LOG.info(">>> Timer 开始调度 <<< 目前总大小："+tmp_size+" ， key的数量 ： "+cache.size()+" , db count = "+current_db_size.size());
+				LOG.info(">>> Timer 调度开始<<<");
+				LOG.info("current db info ： [ tmp_size：{} ， db_count = {} , db2RecordNum = {} , current_db_size = {} ]",
+						tmp_size, current_db_size.size(), JSON.toJSONString(db2RecordNum), JSON.toJSONString(current_db_size));
+				
 				schedule();
 				
-				//uploaad dbinfo
-				protocolImpl.commitDBInfo(getDBInfos());
+				protocolImpl.commitDBInfo(getDBInfos());//上报信息到NN
 			}
 		}, 10, 5, TimeUnit.SECONDS);
 		
-		reload();
+		reload();//预加载
 	}
 	
 	public void put(String db , String key, byte[] value) {
 		final String dbName = db == null || db.length() == 0 ? DEFAULT_DB_NAME:db;
+		//统计size
 		Counter counter = current_db_size.get(dbName);
 		if(counter == null){
 			counter = new Counter(0);
@@ -129,6 +133,14 @@ public class StorageFactory {
 			} catch (InterruptedException e) {
 			}
 		}
+		//统计记录数量
+		AtomicLong recordNum = db2RecordNum.get(db);
+		if(recordNum == null){
+			recordNum = new AtomicLong(0);
+			db2RecordNum.put(dbName, recordNum);
+		}
+		recordNum.addAndGet(1);
+		
 		immutableLock.lock();
 		try {
 			tmp_size+= value.length;
@@ -313,7 +325,6 @@ public class StorageFactory {
 					offset.put(dbName, new ConcurrentHashMap<String, DataFile>());
 				}
 				saveOffset(keyString , value , offset.get(dbName));
-				saveOffset(keyString , value , cache);
 		} catch (FileNotFoundException e) {
 			LOG.error("data file not found. dataFile = {} , packet = {}",dataFile,packet,e);
 		}catch(IOException e){
@@ -330,6 +341,8 @@ public class StorageFactory {
 		File[] dbFiles = file.listFiles(new FileFilter() {
 			public boolean accept(File pathname) {
 				if(pathname.isDirectory()){
+					db2RecordNum.put(pathname.getName(), new AtomicLong(0));
+					current_db_size.put(pathname.getName(), new Counter(0));
 					return true;
 				}
 				return false;
@@ -341,22 +354,6 @@ public class StorageFactory {
 		for(final File dbDir : dbFiles){
 			FutureTask<Long> f = (FutureTask<Long>) reload.submit(new ReloadRunnable(dbDir));
 			futures.put(dbDir.getName(), f);
-		}
-		
-		//TODO 并发问题
-		for(String db : futures.keySet()){
-			Counter counter = current_db_size.get(db);
-			try {
-				if(counter != null){
-					counter.clearAll();
-					counter.getAndAdd(futures.get(db).get());
-				}else{
-					counter = new Counter(futures.get(db).get());
-					current_db_size.put(db, counter);
-				}
-			} catch (Exception e) {
-				LOG.error("reload thread fialed. db = {}",db,e);
-			} 
 		}
 	}
 	
@@ -382,6 +379,7 @@ public class StorageFactory {
 
 		public Long call() {
 			long allSize = 0;
+			long record = 0;
 			while(!pendingReloadDirs.isEmpty()){
 				File file = pendingReloadDirs.poll();
 				File[] metaFiles = file.listFiles(new FileFilter() {
@@ -413,12 +411,8 @@ public class StorageFactory {
 							integer.position(0);
 							int keyLen = integer.getInt();
 							ByteBuffer keyBuf = ByteBuffer.allocate(keyLen);
-							byte[] key = new byte[keyLen];
 							channel.read(keyBuf);
-							keyBuf.position(0);
-							keyBuf.get(key);
 
-							String keyString = new String(key,Charsets.UTF_8);
 							integer.flip();
 							channel.read(integer);
 							
@@ -429,11 +423,11 @@ public class StorageFactory {
 								ByteBuffer locationBuf = ByteBuffer.allocate(16);
 								channel.read(locationBuf);
 								locationBuf.position(0);
-								long start = locationBuf.getLong();
+								locationBuf.getLong();//start
 								locationBuf.position(8);
 								long offset = locationBuf.getLong();
-								saveOffset(keyString, new Location(start, offset, metaFile.getAbsolutePath()), cache);
 								allSize+=offset;
+								record+=1;
 							}
 						}
 					} catch (FileNotFoundException e) {
@@ -450,8 +444,18 @@ public class StorageFactory {
 					}
 				}
 			}
-			LOG.info("DB {} （ {} bytes）reload over.",db,allSize);
+			current_db_size.get(db).incrAllSize(allSize);//记录数据库大小尺寸
+			db2RecordNum.get(db).addAndGet(record);//数据库中记录的数量
+			LOG.info("DB reload over. [db = {} , recordSize = {} , record_num = {} ]",db,allSize,record);
 			return allSize;
+		}
+	}
+	
+	public static void main(String[] args) {
+		AtomicLong l  = new AtomicLong(0);
+		
+		for(int i = 0 ; i < 10 ; i++){
+			System.out.println(l.addAndGet(1));
 		}
 	}
 	

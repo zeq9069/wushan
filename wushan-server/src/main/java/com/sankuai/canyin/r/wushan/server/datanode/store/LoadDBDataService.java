@@ -1,12 +1,9 @@
 package com.sankuai.canyin.r.wushan.server.datanode.store;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -18,8 +15,10 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,6 +32,10 @@ import com.sankuai.canyin.r.wushan.thread.WushanThreadFactory;
 /**
  * 加载对应的db数据
  * 
+ * TODO
+ * 1.优化：生产者消费者模式，降低生产者的速度，使其和消费速度匹配， 避免速度过快，打满堆内存
+ * 			采用阻塞队列进行优化
+ * 
  * @author kyrin
  *
  */
@@ -40,7 +43,7 @@ public class LoadDBDataService {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(LoadDBDataService.class);
 	
-	private Queue<String> queue ;//从db加载的数据，一直被消费
+	private BlockingQueue<String> queue ;//从db加载的数据，一直被消费
 	
 	private volatile Set<String> dbs = new ConcurrentSkipListSet<String>();
 	
@@ -53,7 +56,7 @@ public class LoadDBDataService {
 	private ExecutorService load = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
 			new WushanThreadFactory("worker-load-db"));
 	
-	public LoadDBDataService(String storePath , Set<String> dbs , Queue<String> queue) {
+	public LoadDBDataService(String storePath , Set<String> dbs , BlockingQueue<String> queue) {
 		this.storePath = storePath;
 		if(dbs == null){
 			throw new IllegalArgumentException("DB is NULL.");
@@ -66,19 +69,24 @@ public class LoadDBDataService {
 		if(dbs.isEmpty() || isOver){
 			return;
 		}
+		
+		final CountDownLatch latch = new CountDownLatch(dbs.size());
 		List<Future<Long>> futures = new ArrayList<Future<Long>>(dbs.size());
 		for(String db : dbs){
-			Future<Long> task = load.submit(new LoadData(db , storePath));
+			Future<Long> task = load.submit(new LoadData(db , storePath , latch));
 			futures.add(task);
 		}
-		for(Future<Long> f : futures){
-			try {
-				f.get();
-			} catch (InterruptedException e) {
-			} catch (ExecutionException e) {
+		
+		new Thread(new Runnable() {
+			public void run() {
+				try {
+					latch.await();
+					isOver = true;
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
-		}
-		isOver = true;
+		} , "MONITOR").start();
 	}
 	
 	public boolean isOver(){
@@ -91,9 +99,12 @@ public class LoadDBDataService {
 		
 		private Queue<File> pendingReloadDirs = new LinkedList<File>();
 		
-		public LoadData(String db , String storePath) {
+		CountDownLatch latch;
+		
+		public LoadData(String db , String storePath , CountDownLatch latch) {
 			this.db = db;
 			pendingReloadDirs.add(new File(storePath+"/"+db));
+			this.latch = latch;
 		}
 
 		public Long call() {
@@ -166,7 +177,11 @@ public class LoadDBDataService {
 						for(Location location : locations){
 							ByteBuffer buffer = ByteBuffer.allocate((int)location.getOffset());
 							dataChannel.read(buffer, (int)location.getStart());
-							queue.add(new String(buffer.array(),Charset.forName("UTF-8")));
+							try {
+								queue.put(new String(buffer.array(),Charset.forName("UTF-8")));
+							} catch (InterruptedException e) {
+								LOG.error("BlockingQueue put element failed.",e);
+							}
 						}
 					} catch (FileNotFoundException e) {
 						LOG.error(" reload meta file not found. metaFile = {}",metaFile.getAbsolutePath(),e);
@@ -192,6 +207,7 @@ public class LoadDBDataService {
 			alreadyLoadedDbs.add(db);
 			dbs.remove(db);
 			LOG.info("DB {} （ {} bytes）reload over.",db,allSize);
+			latch.countDown();
 			return allSize;
 		}
 	}

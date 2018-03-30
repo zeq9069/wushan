@@ -43,6 +43,7 @@ public class ClientServerHandler extends ChannelInboundHandlerAdapter{
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 		super.channelRead(ctx, msg);
+		LOG.info("---------------{}",msg);
 		if(msg instanceof DataPacket){
 			dispatcher.dispatch(msg);
 		}else if(msg instanceof Task){

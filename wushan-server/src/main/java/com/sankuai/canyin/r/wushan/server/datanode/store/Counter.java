@@ -33,6 +33,12 @@ public class Counter {
 	public long getAllSize(){
 		return allSize;
 	}
+	
+	public void incrAllSize(long size){
+		this.allSize += size;
+	}
+	
+	
 
 	public void clear(){
 		this.value = new AtomicLong(0);

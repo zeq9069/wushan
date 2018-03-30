@@ -9,6 +9,8 @@ import com.sankuai.canyin.r.wushan.server.message.HeartbeatPakcet;
 import com.sankuai.canyin.r.wushan.server.namenode.ClientInfosManager;
 
 import io.netty.channel.ChannelHandler.Sharable;
+import io.netty.util.ReferenceCountUtil;
+import io.netty.util.internal.PlatformDependent;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
@@ -34,7 +36,7 @@ public class NameNodeTransferDataServerHandler extends ChannelInboundHandlerAdap
 	//断开
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-		super.channelInactive(ctx);
+		//super.channelInactive(ctx);
 		InetSocketAddress addr = (InetSocketAddress)ctx.channel().remoteAddress();
 		ClientInfosManager.unregistTransferDataClient(addr.getAddress().getHostAddress(),addr.getPort());
 		LOG.info("{}  disconnect namenode",addr.getAddress().getHostAddress());
@@ -42,7 +44,7 @@ public class NameNodeTransferDataServerHandler extends ChannelInboundHandlerAdap
 
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-		super.channelRead(ctx, msg);
+		ReferenceCountUtil.release(msg);
 		InetSocketAddress addr = (InetSocketAddress)ctx.channel().remoteAddress();
 		if(msg instanceof HeartbeatPakcet){
 			LOG.info("接收到datanode的心跳包：{}",msg);
@@ -52,7 +54,7 @@ public class NameNodeTransferDataServerHandler extends ChannelInboundHandlerAdap
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-		super.exceptionCaught(ctx, cause);
+		//super.exceptionCaught(ctx, cause);
 		LOG.error("NameNodeServerHandler errors.",cause);
 		InetSocketAddress addr = (InetSocketAddress)ctx.channel().remoteAddress();
 		ClientInfosManager.unregistTransferDataClient(addr.getAddress().getHostAddress(),addr.getPort());

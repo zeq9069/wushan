@@ -120,6 +120,15 @@ public final class ClientInfosManager {
 	public static Channel getTransferDataChannel(String host, int port) {
 		return transferDataClients.get(host + ":" + port);
 	}
+	
+	public static Channel getRandomUsableChannel(){
+		for(Map.Entry<String,Channel> entry : transferDataClients.entrySet()){
+			if(entry.getValue() != null && entry.getValue().isOpen()){
+				return entry.getValue();
+			}
+		}
+		return null;
+	}
 
 	public static Channel getTransferDataChannel(DataInfo dataInfo) {
 		if (dataInfo == null) {

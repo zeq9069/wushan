@@ -5,8 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -33,15 +31,11 @@ public class Dispatcher {
 
 	private Strategy strategy;
 
-	private ExecutorService exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-
 	private Queue<Object> dataQueue = new LinkedBlockingQueue<Object>();
 
 	private static final Strategy DEFAULT_STRATEGY = new DefaultDispatcherStrategy();
 
 	volatile AtomicLong count = new AtomicLong(0);
-
-	private volatile boolean flag = false;
 
 	public Dispatcher(Strategy strategy) {
 		this.strategy = strategy;
@@ -75,17 +69,38 @@ public class Dispatcher {
 							}
 							list.add(target);
 						}
+						List<Object> tmpFailRecords = new ArrayList<Object>(); 
 						for (DataInfo info : dataInfoMap.keySet()) {
 							Channel channel = ClientInfosManager.getTransferDataChannel(info);
-							if (channel != null) {
+							if (channel != null && channel.isOpen()) {
 								for (Object obj : dataInfoMap.get(info)) {
-									channel.write(obj);
-									count.incrementAndGet();
+									try{
+										channel.write(obj);
+										count.incrementAndGet();
+									}catch(Exception e){
+										LOG.error("dispatch error. channel write msg failed.",e);
+										tmpFailRecords.add(obj);
+									}
 								}
 								channel.flush();
 							} else {
-								LOG.error("没有可见的datanode，数据丢弃");
+								tmpFailRecords.addAll(dataInfoMap.get(info));
+								LOG.error("没有可见的datanode，数据随机分发");
+								continue;
 							}
+						}
+						if(!tmpFailRecords.isEmpty()){
+							LOG.info("随机分发数量：{}",tmpFailRecords.size());
+							Channel chn = ClientInfosManager.getRandomUsableChannel();
+							for(Object obj : tmpFailRecords){
+								if(chn != null && chn.isOpen()){
+									chn.write(obj);
+									count.incrementAndGet();
+								}else{
+									chn = ClientInfosManager.getRandomUsableChannel();
+								}
+							}
+							chn.flush();
 						}
 						LOG.info("分发数量：" + count.get());
 					} else {
@@ -97,6 +112,5 @@ public class Dispatcher {
 				}
 			}
 		}).start();
-
 	}
 }

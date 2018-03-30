@@ -74,10 +74,10 @@ public class WorkerManager {
 	}
 	
 	private List<String> buildCommand(String user_dir , Task task){
-		String gc_args = "-Xms1G -Xmx1G -XX:PermSize=128m -XX:MaxPermSize=256m"
-				+ " -XX:+UseG1GC -XX:SurvivorRatio=8 -XX:NewRatio=3 -XX:MaxGCPauseMillis=9"
-				+ " -XX:+ExplicitGCInvokesConcurrent -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintHeapAtGC"
-				+ " -XX:+PrintTenuringDistribution -XX:+PrintGCCause -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintCommandLineFlags";
+		String gc_args = "-Xms2G -Xmx2G -XX:PermSize=256m -XX:MaxPermSize=256m"
+				+ " -XX:+UseConcMarkSweepGC -XX:CMSFullGCsBeforeCompaction=3 -XX:SurvivorRatio=8 -XX:NewRatio=3 -XX:MaxGCPauseMillis=9"
+				+ " -XX:+UseCMSInitiatingOccupancyOnly -XX:CMSInitiatingOccupancyFraction=72 -XX:+ExplicitGCInvokesConcurrent -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintHeapAtGC"
+				+ " -XX:+PrintTenuringDistribution -XX:+PrintGCCause -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintCommandLineFlags ";
 		List<String> command = new ArrayList<String>();
 		command.add("nohup");
 		command.add("java");
